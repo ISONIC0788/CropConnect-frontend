@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { Star } from 'lucide-react';
 
 const Testimonials = () => {
@@ -22,36 +23,70 @@ const Testimonials = () => {
     }
   ];
 
+  // Variants for the grid container to stagger the appearance of the cards
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2, // Staggers the start of each card's animation by 0.2s
+      }
+    }
+  };
+
+  // Variants for individual testimonial cards
+  const cardVariants = {
+    hidden: { y: 30, opacity: 0 },
+    visible: { 
+      y: 0, 
+      opacity: 1, 
+      transition: { duration: 0.6, ease: "easeOut" } 
+    }
+  };
+
   return (
-    <section id="testimonials" className="py-24 px-6 md:px-12 lg:px-24 bg-cream">
+    <section id="testimonials" className="py-24 px-6 md:px-12 lg:px-24 bg-cream overflow-hidden">
       <div className="max-w-7xl mx-auto">
         
-        {/* Section Header */}
-        <div className="text-center mb-16 font-sans">
+        {/* Animated Section Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-16 font-sans"
+        >
           <span className="text-accent font-bold tracking-widest uppercase text-sm mb-4 block">
             Social Proof
           </span>
           <h2 className="font-serif text-4xl md:text-5xl font-bold text-brown">
             What Our Community Says
           </h2>
-        </div>
+        </motion.div>
 
-        {/* Testimonial Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Animated Testimonial Grid */}
+        <motion.div 
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-8"
+        >
           {reviews.map((review, index) => (
-            <div 
+            <motion.div 
               key={index} 
+              variants={cardVariants}
               className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition-shadow"
             >
               <div>
-                {/* 5 Star Rating in Harvest Gold */}
+                {/* 5 Star Rating in Harvest Gold (#FBC02D) */}
                 <div className="flex gap-1 mb-6">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className="w-5 h-5 fill-accent text-accent" />
                   ))}
                 </div>
 
-                {/* Quote in Soil Brown */}
+                {/* Quote in Soil Brown (#3E2723) */}
                 <p className="font-sans italic text-brown/90 leading-relaxed mb-8 text-lg">
                   "{review.quote}"
                 </p>
@@ -69,9 +104,9 @@ const Testimonials = () => {
                   <p className="text-gray-500 text-sm">{review.role}</p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
         
       </div>
     </section>

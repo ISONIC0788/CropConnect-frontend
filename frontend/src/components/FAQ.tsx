@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 const FAQ = () => {
@@ -31,25 +32,59 @@ const FAQ = () => {
     setOpenIndex(openIndex === index ? null : index);
   };
 
+  // Variants for the container to stagger the appearance of the FAQ items
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1, // Each item starts 0.1s after the previous one
+      }
+    }
+  };
+
+  // Variants for each individual FAQ item
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { 
+      y: 0, 
+      opacity: 1, 
+      transition: { duration: 0.5, ease: "easeOut" } 
+    }
+  };
+
   return (
-    <section id="faq" className="py-24 px-6 md:px-12 lg:px-24 bg-cream">
+    <section id="faq" className="py-24 px-6 md:px-12 lg:px-24 bg-cream overflow-hidden">
       <div className="max-w-3xl mx-auto">
         
-        {/* Section Header */}
-        <div className="text-center mb-16 font-sans">
+        {/* Animated Section Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-16 font-sans"
+        >
           <span className="text-accent font-bold tracking-widest uppercase text-sm mb-4 block">
             Support
           </span>
           <h2 className="font-serif text-4xl md:text-5xl font-bold text-brown">
             Frequently Asked Questions
           </h2>
-        </div>
+        </motion.div>
 
-        {/* FAQ List */}
-        <div className="space-y-4 font-sans">
+        {/* Animated FAQ List */}
+        <motion.div 
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          className="space-y-4 font-sans"
+        >
           {faqs.map((faq, index) => (
-            <div 
+            <motion.div 
               key={index} 
+              variants={itemVariants}
               className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
             >
               <button 
@@ -67,18 +102,23 @@ const FAQ = () => {
               </button>
               
               {/* Answer content with smooth opening effect */}
-              <div 
-                className={`transition-all duration-300 ease-in-out ${
-                  openIndex === index ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'
-                }`}
-              >
-                <div className="p-6 pt-0 text-gray-600 leading-relaxed border-t border-gray-50">
-                  {faq.answer}
-                </div>
-              </div>
-            </div>
+              <AnimatePresence>
+                {openIndex === index && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                  >
+                    <div className="p-6 pt-0 text-gray-600 leading-relaxed border-t border-gray-50">
+                      {faq.answer}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
         
       </div>
     </section>
