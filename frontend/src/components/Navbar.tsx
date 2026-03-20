@@ -1,8 +1,35 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Find the Mission section by its ID
+      const aboutSection = document.getElementById('about');
+      
+      if (aboutSection) {
+        // getBoundingClientRect().top gives the exact distance from the top of the screen.
+        // 96 is the height of our navbar (h-24 = 6rem = 96px).
+        if (aboutSection.getBoundingClientRect().top <= 96) {
+          setIsScrolled(true);
+        } else {
+          setIsScrolled(false);
+        }
+      } else {
+        // Fallback just in case the section hasn't loaded
+        if (window.scrollY > 50) setIsScrolled(true);
+        else setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Check immediately on load
+    
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const navLinks = [
     { name: 'About', href: '#about' },
@@ -13,14 +40,15 @@ const Navbar = () => {
   ];
 
   return (
-    // 1. Changed to 'absolute' positioning and 'bg-transparent'
-    <nav className="absolute top-0 left-0 w-full z-50 text-white font-sans bg-transparent">
+    <nav 
+      className={`fixed top-0 left-0 w-full z-50 text-white font-sans transition-all duration-300 ${
+        isScrolled ? 'bg-primary shadow-lg py-0' : 'bg-transparent py-2'
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-24">
           
-          {/* Logo Section */}
           <div className="flex-shrink-0 flex items-center gap-3 cursor-pointer">
-            {/* 2. Removed the white background wrapper to make the logo transparent */}
             <img 
               src="/crop_connect_log.png" 
               alt="CropConnect Logo" 
@@ -31,7 +59,6 @@ const Navbar = () => {
             </span>
           </div>
 
-          {/* Desktop Navigation Links */}
           <div className="hidden md:flex space-x-8 items-center">
             {navLinks.map((link) => (
               <a
@@ -47,7 +74,6 @@ const Navbar = () => {
             </button>
           </div>
 
-          {/* Mobile Menu Toggle Button */}
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsOpen(!isOpen)}
@@ -59,10 +85,8 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Dropdown Menu */}
-      {/* Kept the solid green background here so links are readable when opened over the image */}
       {isOpen && (
-        <div className="md:hidden bg-primary shadow-xl pb-6 pt-2 px-4 border-t border-green-800 absolute w-full left-0 top-24">
+        <div className="md:hidden bg-primary shadow-xl pb-6 pt-2 px-4 border-t border-green-800 absolute w-full left-0 top-[100%]">
           <div className="flex flex-col space-y-4 pt-2">
             {navLinks.map((link) => (
               <a
