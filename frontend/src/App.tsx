@@ -16,7 +16,11 @@ import AdminDashboard1 from './pages/admin/admindashboard1'
 import UserManagement from './pages/admin/UserManagement'
 import DisputeArbitration from './pages/admin/DisputeArbitration'
 import SystemHealth from './pages/admin/SystemHealth'
-import Settings from './pages/admin/Settings' // <-- ADD THIS IMPORT
+import Settings from './pages/admin/Settings'
+
+// Buyer Components
+import BuyerLayout from './layouts/BuyerLayout'
+import SourcingMap from './pages/buyer/SourcingMap'
 
 const LandingPage = () => (
   <main>
@@ -42,9 +46,10 @@ function App() {
         <Route path="/admin/users" element={<AdminLayout><UserManagement /></AdminLayout>} />
         <Route path="/admin/disputes" element={<AdminLayout><DisputeArbitration /></AdminLayout>} />
         <Route path="/admin/health" element={<AdminLayout><SystemHealth /></AdminLayout>} />
-        
-        {/* Admin Settings Route --> ADD THIS ROUTE */}
         <Route path="/admin/settings" element={<AdminLayout><Settings /></AdminLayout>} />
+
+        {/* Buyer Routes */}
+        <Route path="/buyer" element={<BuyerLayout><SourcingMap /></BuyerLayout>} />
         
         <Route path="/logout" element={<div className="p-10 text-center">Logging out...</div>} />
       </Routes>
