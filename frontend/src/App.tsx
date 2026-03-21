@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 // Landing Page Components
 import Navbar from './components/Navbar'
@@ -9,6 +9,11 @@ import Testimonials from './components/Testimonials'
 import FAQ from './components/FAQ'
 import Contact from './components/Contact'
 import Footer from './components/Footer'
+
+// Auth Components
+import AuthLayout from './layouts/AuthLayout'
+import Login from './pages/auth/Login'
+import Signup from './pages/auth/Signup'
 
 // Admin Components
 import AdminLayout from './layouts/AdminLayout'
@@ -24,7 +29,7 @@ import SourcingMap from './pages/buyer/SourcingMap'
 import Watchlist from './pages/buyer/Watchlist' 
 import ActiveOrders from './pages/buyer/ActiveOrders'
 import EscrowWallet from './pages/buyer/EscrowWallet'
-import Profile from './pages/buyer/Profile' // <-- ADDED PROFILE IMPORT
+import Profile from './pages/buyer/Profile'
 
 const LandingPage = () => (
   <main>
@@ -45,6 +50,10 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         
+        {/* Auth Routes */}
+        <Route path="/login" element={<AuthLayout><Login /></AuthLayout>} />
+        <Route path="/signup" element={<AuthLayout><Signup /></AuthLayout>} />
+        
         {/* Admin Routes */}
         <Route path="/admin" element={<AdminLayout><AdminDashboard1 /></AdminLayout>} />
         <Route path="/admin/users" element={<AdminLayout><UserManagement /></AdminLayout>} />
@@ -57,9 +66,10 @@ function App() {
         <Route path="/buyer/watchlist" element={<BuyerLayout><Watchlist /></BuyerLayout>} /> 
         <Route path="/buyer/orders" element={<BuyerLayout><ActiveOrders /></BuyerLayout>} /> 
         <Route path="/buyer/wallet" element={<BuyerLayout><EscrowWallet /></BuyerLayout>} />
-        <Route path="/buyer/profile" element={<BuyerLayout><Profile /></BuyerLayout>} /> {/* <-- ADDED PROFILE ROUTE */}
+        <Route path="/buyer/profile" element={<BuyerLayout><Profile /></BuyerLayout>} />
         
-        <Route path="/logout" element={<div className="p-10 text-center">Logging out...</div>} />
+        {/* Logout Route - Redirects to Login */}
+        <Route path="/logout" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   )
