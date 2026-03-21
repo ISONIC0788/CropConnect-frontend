@@ -1,5 +1,6 @@
 import { useState, ReactNode } from 'react';
 import { LayoutDashboard, Bell, Search, Menu } from 'lucide-react';
+import { useLocation } from 'react-router-dom'; // <-- Added this import
 import AdminSidebar from '../pages/admin/AdminSidebar';
 
 interface AdminLayoutProps {
@@ -10,6 +11,20 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   // State to manage sidebar interactions
   const [isCollapsed, setIsCollapsed] = useState(false); // For Desktop
   const [isMobileOpen, setIsMobileOpen] = useState(false); // For Mobile Devices
+
+  const location = useLocation(); // <-- Get the current URL
+
+  // <-- Determine the title dynamically based on the current URL
+  let pageTitle = 'Dashboard Overview';
+  if (location.pathname === '/admin/users') {
+    pageTitle = 'User Management';
+  } else if (location.pathname === '/admin/disputes') {
+    pageTitle = 'Dispute Arbitration';
+  } else if (location.pathname === '/admin/health') {
+    pageTitle = 'System Health';
+  } else if (location.pathname === '/admin/settings') {
+    pageTitle = 'Settings';
+  }
 
   return (
     <div className="AdminDashboard flex h-screen bg-cream font-sans overflow-hidden">
@@ -45,7 +60,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             </button>
 
             <LayoutDashboard className="w-5 h-5 text-gray-400 hidden sm:block" />
-            <h1 className="font-serif text-lg md:text-xl font-bold text-brown truncate">Dashboard Overview</h1>
+            
+            {/* <-- We use our dynamic {pageTitle} variable here instead of hardcoding it! */}
+            <h1 className="font-serif text-lg md:text-xl font-bold text-brown truncate">
+              {pageTitle}
+            </h1>
           </div>
 
           <div className="flex items-center gap-3 md:gap-6">

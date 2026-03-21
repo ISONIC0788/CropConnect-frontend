@@ -13,8 +13,8 @@ import Footer from './components/Footer'
 // Admin Components
 import AdminLayout from './layouts/AdminLayout'
 import AdminDashboard1 from './pages/admin/admindashboard1'
+import UserManagement from './pages/admin/UserManagement' // <-- ADD THIS IMPORT
 
-// A wrapper for the landing page to keep things clean
 const LandingPage = () => (
   <main>
     <Navbar />
@@ -32,20 +32,20 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Public Landing Page */}
         <Route path="/" element={<LandingPage />} />
         
-        {/* Admin Dashboard Route */}
+        {/* Admin Overview Route */}
         <Route 
           path="/admin" 
-          element={
-            <AdminLayout>
-              <AdminDashboard1 />
-            </AdminLayout>
-          } 
+          element={<AdminLayout><AdminDashboard1 /></AdminLayout>} 
+        />
+
+        {/* Admin User Management Route --> ADD THIS ROUTE */}
+        <Route 
+          path="/admin/users" 
+          element={<AdminLayout><UserManagement /></AdminLayout>} 
         />
         
-        {/* Logout Route (Strictly /logout as requested) */}
         <Route path="/logout" element={<div className="p-10 text-center">Logging out...</div>} />
       </Routes>
     </Router>
