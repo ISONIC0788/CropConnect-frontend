@@ -13,7 +13,8 @@ import Footer from './components/Footer'
 // Admin Components
 import AdminLayout from './layouts/AdminLayout'
 import AdminDashboard1 from './pages/admin/admindashboard1'
-import UserManagement from './pages/admin/UserManagement' // <-- ADD THIS IMPORT
+import UserManagement from './pages/admin/UserManagement'
+import DisputeArbitration from './pages/admin/DisputeArbitration' // <-- ADD THIS IMPORT
 
 const LandingPage = () => (
   <main>
@@ -40,10 +41,16 @@ function App() {
           element={<AdminLayout><AdminDashboard1 /></AdminLayout>} 
         />
 
-        {/* Admin User Management Route --> ADD THIS ROUTE */}
+        {/* Admin User Management Route */}
         <Route 
           path="/admin/users" 
           element={<AdminLayout><UserManagement /></AdminLayout>} 
+        />
+
+        {/* Admin Dispute Arbitration Route --> ADD THIS ROUTE */}
+        <Route 
+          path="/admin/disputes" 
+          element={<AdminLayout><DisputeArbitration /></AdminLayout>} 
         />
         
         <Route path="/logout" element={<div className="p-10 text-center">Logging out...</div>} />
