@@ -21,6 +21,7 @@ import Settings from './pages/admin/Settings'
 // Buyer Components
 import BuyerLayout from './layouts/BuyerLayout'
 import SourcingMap from './pages/buyer/SourcingMap'
+import Watchlist from './pages/buyer/Watchlist' // <-- Added Watchlist Import
 
 const LandingPage = () => (
   <main>
@@ -50,6 +51,7 @@ function App() {
 
         {/* Buyer Routes */}
         <Route path="/buyer" element={<BuyerLayout><SourcingMap /></BuyerLayout>} />
+        <Route path="/buyer/watchlist" element={<BuyerLayout><Watchlist /></BuyerLayout>} /> {/* <-- Added Watchlist Route */}
         
         <Route path="/logout" element={<div className="p-10 text-center">Logging out...</div>} />
       </Routes>
