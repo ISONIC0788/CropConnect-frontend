@@ -22,7 +22,8 @@ import Settings from './pages/admin/Settings'
 import BuyerLayout from './layouts/BuyerLayout'
 import SourcingMap from './pages/buyer/SourcingMap'
 import Watchlist from './pages/buyer/Watchlist' 
-import ActiveOrders from './pages/buyer/ActiveOrders' // <-- ADDED ACTIVE ORDERS IMPORT
+import ActiveOrders from './pages/buyer/ActiveOrders'
+import EscrowWallet from './pages/buyer/EscrowWallet' // <-- ADDED ESCROW WALLET IMPORT
 
 const LandingPage = () => (
   <main>
@@ -53,7 +54,8 @@ function App() {
         {/* Buyer Routes */}
         <Route path="/buyer" element={<BuyerLayout><SourcingMap /></BuyerLayout>} />
         <Route path="/buyer/watchlist" element={<BuyerLayout><Watchlist /></BuyerLayout>} /> 
-        <Route path="/buyer/orders" element={<BuyerLayout><ActiveOrders /></BuyerLayout>} /> {/* <-- ADDED ACTIVE ORDERS ROUTE */}
+        <Route path="/buyer/orders" element={<BuyerLayout><ActiveOrders /></BuyerLayout>} /> 
+        <Route path="/buyer/wallet" element={<BuyerLayout><EscrowWallet /></BuyerLayout>} /> {/* <-- ADDED ESCROW WALLET ROUTE */}
         
         <Route path="/logout" element={<div className="p-10 text-center">Logging out...</div>} />
       </Routes>
