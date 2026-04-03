@@ -34,6 +34,7 @@ import Profile from './pages/buyer/Profile'
 // Agent Components (NEW)
 import AgentLayout from './layouts/AgentLayout'
 import AgentDashboard from './pages/agent/AgentDashboard'
+import OnboardFarmer from './pages/agent/OnboardFarmer' // <-- ADDED ONBOARD FARMER IMPORT
 
 // Temporary Placeholder for Agent screens we haven't built yet
 const Placeholder = ({ title }: { title: string }) => (
@@ -79,10 +80,10 @@ function App() {
         <Route path="/buyer/wallet" element={<BuyerLayout><EscrowWallet /></BuyerLayout>} />
         <Route path="/buyer/profile" element={<BuyerLayout><Profile /></BuyerLayout>} />
         
-        {/* Agent Routes (NEW) */}
+        {/* Agent Routes */}
         <Route path="/agent" element={<AgentLayout><AgentDashboard /></AgentLayout>} />
         <Route path="/agent/verify" element={<AgentLayout><Placeholder title="Produce Verification" /></AgentLayout>} />
-        <Route path="/agent/onboard" element={<AgentLayout><Placeholder title="Farmer Onboarding" /></AgentLayout>} />
+        <Route path="/agent/onboard" element={<AgentLayout><OnboardFarmer /></AgentLayout>} /> {/* <-- UPDATED ROUTE */}
         <Route path="/agent/mediate" element={<AgentLayout><Placeholder title="Dispute Mediation" /></AgentLayout>} />
 
         {/* Logout Route - Redirects to Login */}
