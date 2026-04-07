@@ -14,6 +14,7 @@ import Footer from './components/Footer'
 import AuthLayout from './layouts/AuthLayout'
 import Login from './pages/auth/Login'
 import Signup from './pages/auth/Signup'
+import ProtectedRoute from './components/ProtectedRoute' // <-- NEW IMPORT
 
 // --- ADMIN COMPONENTS ---
 import AdminLayout from './layouts/AdminLayout'
@@ -55,34 +56,40 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
-        
-        {/* Auth Routes */}
         <Route path="/login" element={<AuthLayout><Login /></AuthLayout>} />
         <Route path="/signup" element={<AuthLayout><Signup /></AuthLayout>} />
         
-        {/* Admin Routes */}
-        <Route path="/admin" element={<AdminLayout><AdminDashboard1 /></AdminLayout>} />
-        <Route path="/admin/users" element={<AdminLayout><UserManagement /></AdminLayout>} />
-        <Route path="/admin/disputes" element={<AdminLayout><DisputeArbitration /></AdminLayout>} />
-        <Route path="/admin/health" element={<AdminLayout><SystemHealth /></AdminLayout>} />
-        <Route path="/admin/settings" element={<AdminLayout><Settings /></AdminLayout>} />
+        {/* Admin Routes - Protected */}
+        <Route path="/admin" element={<ProtectedRoute allowedRoles={['ADMIN', 'ROLE_ADMIN']}><AdminLayout><AdminDashboard1 /></AdminLayout></ProtectedRoute>} />
+        <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['ADMIN', 'ROLE_ADMIN']}><AdminLayout><UserManagement /></AdminLayout></ProtectedRoute>} />
+        <Route path="/admin/disputes" element={<ProtectedRoute allowedRoles={['ADMIN', 'ROLE_ADMIN']}><AdminLayout><DisputeArbitration /></AdminLayout></ProtectedRoute>} />
+        <Route path="/admin/health" element={<ProtectedRoute allowedRoles={['ADMIN', 'ROLE_ADMIN']}><AdminLayout><SystemHealth /></AdminLayout></ProtectedRoute>} />
+        <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['ADMIN', 'ROLE_ADMIN']}><AdminLayout><Settings /></AdminLayout></ProtectedRoute>} />
 
-        {/* Buyer Routes */}
-        <Route path="/buyer" element={<BuyerLayout><SourcingMap /></BuyerLayout>} />
-        <Route path="/buyer/watchlist" element={<BuyerLayout><Watchlist /></BuyerLayout>} /> 
-        <Route path="/buyer/orders" element={<BuyerLayout><ActiveOrders /></BuyerLayout>} /> 
-        <Route path="/buyer/wallet" element={<BuyerLayout><EscrowWallet /></BuyerLayout>} />
-        <Route path="/buyer/profile" element={<BuyerLayout><Profile /></BuyerLayout>} />
+        {/* Buyer Routes - Protected */}
+        <Route path="/buyer" element={<ProtectedRoute allowedRoles={['BUYER', 'ROLE_BUYER']}><BuyerLayout><SourcingMap /></BuyerLayout></ProtectedRoute>} />
+        <Route path="/buyer/watchlist" element={<ProtectedRoute allowedRoles={['BUYER', 'ROLE_BUYER']}><BuyerLayout><Watchlist /></BuyerLayout></ProtectedRoute>} /> 
+        <Route path="/buyer/orders" element={<ProtectedRoute allowedRoles={['BUYER', 'ROLE_BUYER']}><BuyerLayout><ActiveOrders /></BuyerLayout></ProtectedRoute>} /> 
+        <Route path="/buyer/wallet" element={<ProtectedRoute allowedRoles={['BUYER', 'ROLE_BUYER']}><BuyerLayout><EscrowWallet /></BuyerLayout></ProtectedRoute>} />
+        <Route path="/buyer/profile" element={<ProtectedRoute allowedRoles={['BUYER', 'ROLE_BUYER']}><BuyerLayout><Profile /></BuyerLayout></ProtectedRoute>} />
         
-        {/* Agent Routes */}
-        <Route path="/agent" element={<AgentLayout><AgentDashboard /></AgentLayout>} />
-        <Route path="/agent/verify" element={<AgentLayout><VerifyProduce /></AgentLayout>} />
-        <Route path="/agent/onboard" element={<AgentLayout><OnboardFarmer /></AgentLayout>} />
-        <Route path="/agent/mediate" element={<AgentLayout><MediateDispute /></AgentLayout>} />
+        {/* Agent Routes - Protected */}
+        <Route path="/agent" element={<ProtectedRoute allowedRoles={['AGENT', 'ROLE_AGENT']}><AgentLayout><AgentDashboard /></AgentLayout></ProtectedRoute>} />
+        <Route path="/agent/verify" element={<ProtectedRoute allowedRoles={['AGENT', 'ROLE_AGENT']}><AgentLayout><VerifyProduce /></AgentLayout></ProtectedRoute>} />
+        <Route path="/agent/onboard" element={<ProtectedRoute allowedRoles={['AGENT', 'ROLE_AGENT']}><AgentLayout><OnboardFarmer /></AgentLayout></ProtectedRoute>} />
+        <Route path="/agent/mediate" element={<ProtectedRoute allowedRoles={['AGENT', 'ROLE_AGENT']}><AgentLayout><MediateDispute /></AgentLayout></ProtectedRoute>} />
 
         {/* Logout Route - Redirects to Login */}
-        <Route path="/logout" element={<Navigate to="/login" replace />} />
+        <Route path="/logout" element={
+          <div onClick={() => {
+            localStorage.removeItem('jwt_token');
+            window.location.href = '/login';
+          }}>
+            <Navigate to="/login" replace />
+          </div>
+        } />
       </Routes>
     </Router>
   )
