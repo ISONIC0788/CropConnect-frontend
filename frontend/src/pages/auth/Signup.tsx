@@ -1,10 +1,25 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Building2, User, Check } from 'lucide-react';
+import { Building2, User as UserIcon, Check } from 'lucide-react';
+import { authService } from '../../api/authService';
 
 const Signup = () => {
+  // UI State
   const [role, setRole] = useState<'buyer' | 'agent'>('buyer');
+  
+  // Form State
+  const [fullName, setFullName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
+  
+  // Fields present in UI but missing in DB currently (we just hold them in state)
+  const [email, setEmail] = useState('');
+  const [company, setCompany] = useState('');
+
+  // API State
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
   const navigate = useNavigate();
 
   // Calculate simple password strength (0-3)
@@ -18,10 +33,33 @@ const Signup = () => {
   };
   const strength = getPasswordStrength();
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate successful registration and redirect to dashboard
-    navigate(role === 'buyer' ? '/buyer' : '/admin');
+    setError('');
+    setLoading(true);
+
+    try {
+      // 1. Prepare data to match your Spring Boot User.java exactly
+      const userData = {
+        fullName: fullName,
+        phoneNumber: phoneNumber,
+        passwordHash: password, // Using raw password here; ensure backend hashes it!
+        role: role === 'buyer' ? 'BUYER' : 'AGENT' // Use standard uppercase roles
+      };
+
+      // 2. Call the register API
+      await authService.register(userData);
+
+      // 3. If successful, redirect them to login so they can authenticate
+      alert('Account created successfully! Please log in.');
+      navigate('/login');
+
+    } catch (err: any) {
+      console.error(err);
+      setError(err.response?.data?.message || 'Failed to create account. Phone number might already be in use.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -34,6 +72,13 @@ const Signup = () => {
         </h2>
         <p className="text-sm text-gray-500">Start sourcing directly from verified farmers.</p>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl text-center font-medium">
+          {error}
+        </div>
+      )}
 
       {/* ROLE SELECTION */}
       <div className="grid grid-cols-2 gap-3 mb-8">
@@ -56,7 +101,7 @@ const Signup = () => {
             role === 'agent' ? 'border-[#FBC02D] bg-yellow-50/50' : 'border-gray-200 hover:border-yellow-200'
           }`}
         >
-          <User className={`w-5 h-5 mb-2 ${role === 'agent' ? 'text-[#D97706]' : 'text-gray-400'}`} />
+          <UserIcon className={`w-5 h-5 mb-2 ${role === 'agent' ? 'text-[#D97706]' : 'text-gray-400'}`} />
           <p className={`text-sm font-bold ${role === 'agent' ? 'text-[#3E2723]' : 'text-gray-500'}`}>Field Agent</p>
           {role === 'agent' && <div className="absolute top-3 right-3 w-4 h-4 bg-[#FBC02D] rounded-full flex items-center justify-center"><Check className="w-3 h-3 text-white" /></div>}
         </button>
@@ -66,24 +111,54 @@ const Signup = () => {
         
         {/* INPUT FIELDS */}
         <div className="relative">
-          <input type="text" id="fullname" required className="peer w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl text-sm text-[#3E2723] placeholder-transparent focus:border-[#2E7D32] focus:ring-0 focus:outline-none transition-colors bg-white" placeholder="Full Name" />
+          <input 
+            type="text" 
+            id="fullname" 
+            required 
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className="peer w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl text-sm text-[#3E2723] placeholder-transparent focus:border-[#2E7D32] focus:ring-0 focus:outline-none transition-colors bg-white" 
+            placeholder="Full Name" 
+          />
           <label htmlFor="fullname" className="absolute left-4 top-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-4 peer-placeholder-shown:normal-case peer-placeholder-shown:font-medium peer-focus:top-2 peer-focus:text-[11px] peer-focus:uppercase peer-focus:font-bold peer-focus:text-[#2E7D32]">Full Name</label>
         </div>
 
         {role === 'buyer' && (
           <div className="relative">
-            <input type="text" id="company" required className="peer w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl text-sm text-[#3E2723] placeholder-transparent focus:border-[#2E7D32] focus:ring-0 focus:outline-none transition-colors bg-white" placeholder="Company/Business Name" />
+            <input 
+              type="text" 
+              id="company" 
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              className="peer w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl text-sm text-[#3E2723] placeholder-transparent focus:border-[#2E7D32] focus:ring-0 focus:outline-none transition-colors bg-white" 
+              placeholder="Company/Business Name" 
+            />
             <label htmlFor="company" className="absolute left-4 top-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-4 peer-placeholder-shown:normal-case peer-placeholder-shown:font-medium peer-focus:top-2 peer-focus:text-[11px] peer-focus:uppercase peer-focus:font-bold peer-focus:text-[#2E7D32]">Company/Business Name</label>
           </div>
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="relative">
-            <input type="email" id="signup-email" required className="peer w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl text-sm text-[#3E2723] placeholder-transparent focus:border-[#2E7D32] focus:ring-0 focus:outline-none transition-colors bg-white invalid:[&:not(:placeholder-shown):not(:focus)]:border-red-400" placeholder="Email Address" />
+            <input 
+              type="email" 
+              id="signup-email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="peer w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl text-sm text-[#3E2723] placeholder-transparent focus:border-[#2E7D32] focus:ring-0 focus:outline-none transition-colors bg-white" 
+              placeholder="Email Address" 
+            />
             <label htmlFor="signup-email" className="absolute left-4 top-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-4 peer-placeholder-shown:normal-case peer-placeholder-shown:font-medium peer-focus:top-2 peer-focus:text-[11px] peer-focus:uppercase peer-focus:font-bold peer-focus:text-[#2E7D32]">Email Address</label>
           </div>
           <div className="relative">
-            <input type="tel" id="signup-phone" required className="peer w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl text-sm text-[#3E2723] placeholder-transparent focus:border-[#2E7D32] focus:ring-0 focus:outline-none transition-colors bg-white" placeholder="Phone Number" />
+            <input 
+              type="tel" 
+              id="signup-phone" 
+              required 
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              className="peer w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl text-sm text-[#3E2723] placeholder-transparent focus:border-[#2E7D32] focus:ring-0 focus:outline-none transition-colors bg-white" 
+              placeholder="Phone Number" 
+            />
             <label htmlFor="signup-phone" className="absolute left-4 top-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-4 peer-placeholder-shown:normal-case peer-placeholder-shown:font-medium peer-focus:top-2 peer-focus:text-[11px] peer-focus:uppercase peer-focus:font-bold peer-focus:text-[#2E7D32]">Phone Number</label>
           </div>
         </div>
@@ -122,9 +197,12 @@ const Signup = () => {
         {/* PRIMARY ACTION */}
         <button 
           type="submit" 
-          className="w-full py-4 mt-2 rounded-xl text-white font-bold text-base bg-[#2E7D32] hover:bg-green-800 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
+          disabled={loading}
+          className={`w-full py-4 mt-2 rounded-xl text-white font-bold text-base shadow-md transition-all ${
+            loading ? 'bg-green-400 cursor-not-allowed' : 'bg-[#2E7D32] hover:bg-green-800 hover:shadow-lg hover:-translate-y-0.5'
+          }`}
         >
-          Create Account
+          {loading ? <span className="animate-pulse">Creating Account...</span> : 'Create Account'}
         </button>
       </form>
 
