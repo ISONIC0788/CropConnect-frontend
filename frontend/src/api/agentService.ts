@@ -22,7 +22,7 @@ export const agentService = {
     return response.data;
   },
 
-  // 3. NEW: Onboard a farmer
+  // 3. Onboard a farmer
   onboardFarmer: async (data: {
     fullName: string;
     phoneNumber: string;
@@ -31,6 +31,18 @@ export const agentService = {
     latitude: number;
   }) => {
     const response = await axiosClient.post('/users/agent/onboard-farmer', data);
+    return response.data;
+  }, // <--- THIS COMMA WAS MISSING!
+
+  // 4. Get a single listing by ID
+  getListingById: async (listingId: string) => {
+    const response = await axiosClient.get(`/listings/${listingId}`);
+    return response.data;
+  },
+
+  // 5. Mark a listing as verified
+  verifyListing: async (listingId: string) => {
+    const response = await axiosClient.put(`/listings/${listingId}/verify`);
     return response.data;
   }
 };
