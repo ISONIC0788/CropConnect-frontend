@@ -40,8 +40,10 @@ import VerifyProduce from './pages/agent/VerifyProduce'
 import MediateDispute from './pages/agent/MediateDispute'
 
 // --- FARMER COMPONENTS ---
-import FarmerLayout from './layouts/FarmerLayout' // <-- NEW IMPORT
-import FarmerDashboard from './pages/farmer/FarmerDashboard' // <-- NEW IMPORT
+import FarmerLayout from './layouts/FarmerLayout' 
+import FarmerDashboard from './pages/farmer/FarmerDashboard' 
+import SalesHistory from './pages/farmer/SalesHistory' // <-- NEW IMPORT
+import Payments from './pages/farmer/Payments'         // <-- NEW IMPORT
 
 const LandingPage = () => (
   <main>
@@ -90,6 +92,21 @@ function App() {
           <ProtectedRoute allowedRoles={['FARMER', 'ROLE_FARMER']}>
             <FarmerLayout>
               <FarmerDashboard />
+            </FarmerLayout>
+          </ProtectedRoute>
+        } />
+        {/* NEW ROUTES FOR FARMER HISTORY AND PAYMENTS */}
+        <Route path="/farmer/history" element={
+          <ProtectedRoute allowedRoles={['FARMER', 'ROLE_FARMER']}>
+            <FarmerLayout>
+              <SalesHistory />
+            </FarmerLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/farmer/payments" element={
+          <ProtectedRoute allowedRoles={['FARMER', 'ROLE_FARMER']}>
+            <FarmerLayout>
+              <Payments />
             </FarmerLayout>
           </ProtectedRoute>
         } />
