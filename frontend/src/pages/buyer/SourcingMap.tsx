@@ -1,30 +1,102 @@
-// src/pages/buyer/SourcingMap.tsx
-import { useState } from 'react';
-import { Search, Filter, MapPin, ChevronDown } from 'lucide-react';
-import { cropListings } from '../../data/mockBuyerData';
+import React, { useState, useEffect } from 'react';
+import { Search, Filter, MapPin, ChevronDown, Loader2 } from 'lucide-react';
 import InventoryCard from '../../components/buyer/InventoryCard';
+import { buyerService } from '../../api/buyerService';
+
+// The shape that InventoryCard expects
+export interface FrontendCropListing {
+  id: string;
+  crop: string;
+  grade: string;
+  quantity: number;
+  unit: string;
+  pricePerKg: number;
+  farmer: string;
+  district: string;
+  distance: number;
+  verified: boolean;
+  coordinates: { lat: number; lng: number };
+}
+
+// Utility to calculate real distance between two GPS coordinates
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // Earth radius in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
+  return Math.round(R * c); // Distance in km, rounded to whole number
+}
+
+// Hardcoded Warehouse Location (Kigali, Rwanda)
+const WAREHOUSE_LAT = -1.9441;
+const WAREHOUSE_LNG = 30.0619;
 
 const SourcingMap = () => {
   const [radius, setRadius] = useState<number>(50);
   const [selectedCrop, setSelectedCrop] = useState<string>('All Crops');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  
+  // Real Data State
+  const [listings, setListings] = useState<FrontendCropListing[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRealData = async () => {
+      try {
+        const backendData = await buyerService.getAllListings();
+        
+        // Map backend data to the frontend structure
+        const mappedData: FrontendCropListing[] = backendData
+          .filter(item => item.isVerified && item.status === 'ACTIVE') // Buyers only see verified stuff!
+          .map(item => ({
+            id: item.listingId,
+            crop: item.cropType,
+            grade: "Standard", // Defaulting grade since it's not in DB yet
+            quantity: item.quantityKg,
+            unit: "kg",
+            pricePerKg: item.pricePerKg,
+            farmer: item.farmer?.fullName || "Registered Farmer",
+            district: "Rwanda", 
+            verified: item.isVerified,
+            coordinates: {
+              lat: item.location?.latitude || 0,
+              lng: item.location?.longitude || 0
+            },
+            // Calculate distance dynamically from the Warehouse
+            distance: item.location ? 
+              calculateDistance(WAREHOUSE_LAT, WAREHOUSE_LNG, item.location.latitude, item.location.longitude) 
+              : 0
+          }));
+          
+        setListings(mappedData);
+      } catch (error) {
+        console.error("Failed to load listings:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRealData();
+  }, []);
 
   // Derived State: Filter the listings based on map criteria
-  const filteredListings = cropListings.filter((listing) => {
+  const filteredListings = listings.filter((listing) => {
     const matchesRadius = listing.distance <= radius;
-    const matchesCrop = selectedCrop === 'All Crops' || listing.crop.includes(selectedCrop);
+    const matchesCrop = selectedCrop === 'All Crops' || listing.crop.toLowerCase().includes(selectedCrop.toLowerCase());
     const matchesSearch = 
       searchQuery === '' || 
       listing.crop.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      listing.district.toLowerCase().includes(searchQuery.toLowerCase()) ||
       listing.farmer.toLowerCase().includes(searchQuery.toLowerCase());
     
     return matchesRadius && matchesCrop && matchesSearch;
   });
 
   // Calculate Bulk Aggregation Totals
-  const selectedItems = cropListings.filter(l => selectedIds.includes(l.id));
+  const selectedItems = listings.filter(l => selectedIds.includes(l.id));
   const totalVolume = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
   const totalCost = selectedItems.reduce((sum, item) => sum + (item.quantity * item.pricePerKg), 0);
 
@@ -40,7 +112,6 @@ const SourcingMap = () => {
         
         {/* Floating Top Controls */}
         <div className="absolute top-4 left-4 right-4 z-10 flex gap-4">
-          {/* Radius Filter */}
           <div className="bg-white/95 backdrop-blur px-6 py-4 rounded-xl shadow-md border border-gray-100 flex-1 flex items-center gap-6">
             <div className="flex items-center gap-2 text-gray-500 font-bold text-sm min-w-[120px]">
               <Filter className="w-4 h-4 text-[#2E7D32]" /> Radius Filter
@@ -58,63 +129,69 @@ const SourcingMap = () => {
             <span className="font-bold text-[#2E7D32] min-w-[50px]">{radius}km</span>
           </div>
 
-          {/* Crop Type Dropdown */}
           <div className="bg-white/95 backdrop-blur px-4 py-4 rounded-xl shadow-md border border-gray-100 flex items-center gap-3">
             <span className="text-xs font-bold text-gray-500">Crop Type</span>
-            <div className="flex items-center gap-2 border border-gray-200 rounded-md px-3 py-1.5 cursor-pointer bg-white">
-              <span className="text-sm font-medium text-[#3E2723]">{selectedCrop}</span>
-              <ChevronDown className="w-4 h-4 text-gray-400" />
-            </div>
+            <select 
+              value={selectedCrop}
+              onChange={(e) => setSelectedCrop(e.target.value)}
+              className="flex items-center gap-2 border border-gray-200 rounded-md px-3 py-1.5 cursor-pointer bg-white text-sm font-medium text-[#3E2723] outline-none"
+            >
+              <option value="All Crops">All Crops</option>
+              <option value="Maize">Maize</option>
+              <option value="Beans">Beans</option>
+              <option value="Coffee">Coffee</option>
+            </select>
           </div>
         </div>
 
         {/* Map Visualization (Abstract UI Representation) */}
         <div className="flex-1 relative flex items-center justify-center overflow-hidden">
-          {/* Radar Circles */}
-          <div className="absolute border border-[#2E7D32]/20 rounded-full w-[300px] h-[300px] flex items-center justify-center">
-            <div className="absolute border border-[#2E7D32]/30 rounded-full w-[150px] h-[150px]"></div>
-          </div>
-
-          {/* Central Warehouse Pin */}
-          <div className="relative z-10 flex flex-col items-center">
-            <div className="bg-white px-3 py-1 rounded-full text-[10px] font-bold text-[#2E7D32] shadow-md border border-green-100 mb-1">
-              Your Warehouse
+          {loading ? (
+            <div className="flex flex-col items-center text-[#2E7D32]">
+              <Loader2 className="w-8 h-8 animate-spin mb-2" />
+              <p className="font-bold font-serif">Scanning Real-time Satellites...</p>
             </div>
-            <div className="w-4 h-4 bg-[#2E7D32] rounded-full ring-4 ring-green-100 shadow-lg"></div>
-          </div>
-
-          {/* Render Crop Pins dynamically based on filtered data */}
-          {filteredListings.map((listing, i) => {
-            const isSelected = selectedIds.includes(listing.id);
-            // Distribute pins randomly in a circle for the mockup
-            const angle = (i / filteredListings.length) * Math.PI * 2;
-            const distanceScale = (listing.distance / 150) * 40; // Scale to map size
-            const top = `calc(50% + ${Math.sin(angle) * distanceScale}%)`;
-            const left = `calc(50% + ${Math.cos(angle) * distanceScale}%)`;
-
-            return (
-              <div 
-                key={listing.id}
-                className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110 z-20"
-                style={{ top, left }}
-                onClick={() => toggleSelection(listing.id)}
-              >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-lg border-2 
-                  ${isSelected ? 'bg-[#FBC02D] border-white text-brown' : 
-                    listing.verified ? 'bg-[#2E7D32] border-white text-white' : 'bg-gray-400 border-white text-white'}`}
-                >
-                  <MapPin className="w-4 h-4" />
-                </div>
+          ) : (
+            <>
+              {/* Radar Circles */}
+              <div className="absolute border border-[#2E7D32]/20 rounded-full w-[300px] h-[300px] flex items-center justify-center">
+                <div className="absolute border border-[#2E7D32]/30 rounded-full w-[150px] h-[150px]"></div>
               </div>
-            );
-          })}
-        </div>
 
-        {/* Map Legend */}
-        <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur px-4 py-3 rounded-xl shadow-sm border border-gray-100 flex gap-4 text-[11px] font-bold text-gray-500">
-          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#2E7D32]"></span> Verified</div>
-          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-gray-400"></span> Unverified</div>
-          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#FBC02D]"></span> Selected</div>
+              {/* Central Warehouse Pin */}
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="bg-white px-3 py-1 rounded-full text-[10px] font-bold text-[#2E7D32] shadow-md border border-green-100 mb-1">
+                  Your Warehouse
+                </div>
+                <div className="w-4 h-4 bg-[#2E7D32] rounded-full ring-4 ring-green-100 shadow-lg"></div>
+              </div>
+
+              {/* Render Real Crop Pins */}
+              {filteredListings.map((listing, i) => {
+                const isSelected = selectedIds.includes(listing.id);
+                // Distribute pins randomly in a circle based on their distance
+                const angle = (i / filteredListings.length) * Math.PI * 2;
+                const distanceScale = (listing.distance / 150) * 40; // Scale to map visual size
+                const top = `calc(50% + ${Math.sin(angle) * distanceScale}%)`;
+                const left = `calc(50% + ${Math.cos(angle) * distanceScale}%)`;
+
+                return (
+                  <div 
+                    key={listing.id}
+                    className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110 z-20"
+                    style={{ top, left }}
+                    onClick={() => toggleSelection(listing.id)}
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-lg border-2 
+                      ${isSelected ? 'bg-[#FBC02D] border-white text-brown' : 'bg-[#2E7D32] border-white text-white'}`}
+                    >
+                      <MapPin className="w-4 h-4" />
+                    </div>
+                  </div>
+                );
+              })}
+            </>
+          )}
         </div>
       </div>
 
@@ -127,7 +204,7 @@ const SourcingMap = () => {
             <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
             <input 
               type="text" 
-              placeholder="Search crops, farmers, districts..." 
+              placeholder="Search crops, farmers..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32] bg-white shadow-sm"
@@ -140,18 +217,22 @@ const SourcingMap = () => {
 
         {/* Scrollable Feed */}
         <div className="flex-1 overflow-y-auto pr-2 space-y-4 no-scrollbar">
-          {filteredListings.map(listing => (
-            <InventoryCard 
-              key={listing.id}
-              listing={listing}
-              isSelected={selectedIds.includes(listing.id)}
-              onToggle={() => toggleSelection(listing.id)}
-            />
-          ))}
-          {filteredListings.length === 0 && (
+          {loading ? (
+            <p className="text-center text-gray-500 mt-10 animate-pulse">Loading inventory...</p>
+          ) : (
+            filteredListings.map(listing => (
+              <InventoryCard 
+                key={listing.id}
+                listing={listing}
+                isSelected={selectedIds.includes(listing.id)}
+                onToggle={() => toggleSelection(listing.id)}
+              />
+            ))
+          )}
+          {!loading && filteredListings.length === 0 && (
             <div className="text-center py-12 text-gray-400">
               <MapPin className="w-10 h-10 mx-auto mb-3 opacity-20" />
-              <p>No listings found. Try expanding your radius.</p>
+              <p>No verified listings found. Wait for agents to verify more produce or expand your radius!</p>
             </div>
           )}
         </div>
@@ -175,6 +256,7 @@ const SourcingMap = () => {
             </div>
           </div>
           
+          {/* We will hook this button up to the bidding system next! */}
           <button className="bg-[#2E7D32] hover:bg-green-800 text-white px-8 py-4 rounded-xl font-bold transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2">
             Place Bulk Bid & Lock Inventory
           </button>
