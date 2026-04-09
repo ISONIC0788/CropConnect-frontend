@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, MapPin, ChevronDown, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 import InventoryCard from '../../components/buyer/InventoryCard';
 import { buyerService } from '../../api/buyerService';
 
@@ -35,6 +37,7 @@ const WAREHOUSE_LAT = -1.9441;
 const WAREHOUSE_LNG = 30.0619;
 
 const SourcingMap = () => {
+  const navigate = useNavigate();
   const [radius, setRadius] = useState<number>(50);
   const [selectedCrop, setSelectedCrop] = useState<string>('All Crops');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -43,6 +46,7 @@ const SourcingMap = () => {
   // Real Data State
   const [listings, setListings] = useState<FrontendCropListing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isBidding, setIsBidding] = useState(false);
 
   useEffect(() => {
     const fetchRealData = async () => {
@@ -82,6 +86,40 @@ const SourcingMap = () => {
 
     fetchRealData();
   }, []);
+
+  // THE FIX: The function that handles the Bulk Bid button click
+  const handlePlaceBulkBid = async () => {
+    if (selectedIds.length === 0) return;
+    setIsBidding(true);
+
+    try {
+      // 1. Get the current logged-in Buyer's ID from the JWT token
+      const token = localStorage.getItem('jwt_token');
+      if (!token) throw new Error("Not logged in");
+      const decoded: any = jwtDecode(token);
+      const buyerId = decoded.userId;
+
+      // 2. Loop through every selected item and place a bid for its full asking price
+      const bidPromises = selectedItems.map(item => {
+        // We will bid the exact asking price (pricePerKg * quantity)
+        const totalBidAmount = item.pricePerKg * item.quantity;
+        return buyerService.placeBid(item.id, buyerId, totalBidAmount);
+      });
+
+      // 3. Wait for all bids to hit the Spring Boot backend
+      await Promise.all(bidPromises);
+
+      // 4. Success! Redirect the buyer to their Escrow Wallet to see the locked funds
+      alert("Bids placed successfully! Redirecting to your Escrow Wallet.");
+      navigate('/buyer/wallet');
+
+    } catch (error) {
+      console.error("Failed to place bulk bids:", error);
+      alert("Error placing bids. Make sure you are logged in as a Buyer.");
+    } finally {
+      setIsBidding(false);
+    }
+  };
 
   // Derived State: Filter the listings based on map criteria
   const filteredListings = listings.filter((listing) => {
@@ -256,9 +294,13 @@ const SourcingMap = () => {
             </div>
           </div>
           
-          {/* We will hook this button up to the bidding system next! */}
-          <button className="bg-[#2E7D32] hover:bg-green-800 text-white px-8 py-4 rounded-xl font-bold transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2">
-            Place Bulk Bid & Lock Inventory
+          <button 
+            onClick={handlePlaceBulkBid}
+            disabled={isBidding}
+            className="bg-[#2E7D32] hover:bg-green-800 text-white px-8 py-4 rounded-xl font-bold transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isBidding ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+            {isBidding ? 'Placing Bids...' : 'Place Bulk Bid & Lock Inventory'}
           </button>
         </div>
       )}
