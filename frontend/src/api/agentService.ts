@@ -1,12 +1,16 @@
 import axiosClient from './axiosClient';
 
-// Matches your Spring Boot Listing.java model
-export interface PendingVerification {
+// MATCHES YOUR SPRING BOOT LISTING.JAVA MODEL EXACTLY
+export interface VerificationTask {
   listingId: string; 
   cropType: string;
-  quantityAvailable: number; 
+  quantityKg: number; 
   pricePerKg: number; 
-  farmerName?: string;
+  isVerified: boolean;
+  farmer?: {
+    fullName: string;
+    phoneNumber: string;
+  };
 }
 
 export const agentService = {
@@ -16,9 +20,9 @@ export const agentService = {
     return response.data;
   },
 
-  // 2. Get listings that need verification
-  getPendingVerifications: async (): Promise<PendingVerification[]> => {
-    const response = await axiosClient.get('/listings/pending');
+  // 2. Get ALL listings (both verified and unverified)
+  getAllListings: async (): Promise<VerificationTask[]> => {
+    const response = await axiosClient.get('/listings');
     return response.data;
   },
 
@@ -32,7 +36,7 @@ export const agentService = {
   }) => {
     const response = await axiosClient.post('/users/agent/onboard-farmer', data);
     return response.data;
-  }, // <--- THIS COMMA WAS MISSING!
+  },
 
   // 4. Get a single listing by ID
   getListingById: async (listingId: string) => {
