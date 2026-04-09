@@ -14,7 +14,7 @@ import Footer from './components/Footer'
 import AuthLayout from './layouts/AuthLayout'
 import Login from './pages/auth/Login'
 import Signup from './pages/auth/Signup'
-import ProtectedRoute from './components/ProtectedRoute' // <-- NEW IMPORT
+import ProtectedRoute from './components/ProtectedRoute'
 
 // --- ADMIN COMPONENTS ---
 import AdminLayout from './layouts/AdminLayout'
@@ -38,6 +38,10 @@ import AgentDashboard from './pages/agent/AgentDashboard'
 import OnboardFarmer from './pages/agent/OnboardFarmer'
 import VerifyProduce from './pages/agent/VerifyProduce' 
 import MediateDispute from './pages/agent/MediateDispute'
+
+// --- FARMER COMPONENTS ---
+import FarmerLayout from './layouts/FarmerLayout' // <-- NEW IMPORT
+import FarmerDashboard from './pages/farmer/FarmerDashboard' // <-- NEW IMPORT
 
 const LandingPage = () => (
   <main>
@@ -80,6 +84,15 @@ function App() {
         <Route path="/agent/verify" element={<ProtectedRoute allowedRoles={['AGENT', 'ROLE_AGENT']}><AgentLayout><VerifyProduce /></AgentLayout></ProtectedRoute>} />
         <Route path="/agent/onboard" element={<ProtectedRoute allowedRoles={['AGENT', 'ROLE_AGENT']}><AgentLayout><OnboardFarmer /></AgentLayout></ProtectedRoute>} />
         <Route path="/agent/mediate" element={<ProtectedRoute allowedRoles={['AGENT', 'ROLE_AGENT']}><AgentLayout><MediateDispute /></AgentLayout></ProtectedRoute>} />
+
+        {/* Farmer Routes - Protected */}
+        <Route path="/farmer" element={
+          <ProtectedRoute allowedRoles={['FARMER', 'ROLE_FARMER']}>
+            <FarmerLayout>
+              <FarmerDashboard />
+            </FarmerLayout>
+          </ProtectedRoute>
+        } />
 
         {/* Logout Route - Redirects to Login */}
         <Route path="/logout" element={

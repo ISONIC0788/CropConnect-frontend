@@ -47,6 +47,9 @@ const Login = () => {
         window.location.href = '/admin';
       } else if (userRole === 'AGENT' || userRole === 'ROLE_AGENT') {
         window.location.href = '/agent';
+      } else if (userRole === 'FARMER' || userRole === 'ROLE_FARMER') {
+        // THE FIX: Properly route the farmer to their dashboard!
+        window.location.href = '/farmer'; 
       } else {
         window.location.href = '/buyer'; // Default routing
       }
