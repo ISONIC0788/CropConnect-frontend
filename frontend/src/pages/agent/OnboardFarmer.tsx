@@ -1,25 +1,61 @@
-import { useState } from 'react';
-import { User, Phone, MapPin, Sprout, CheckCircle2, ChevronDown } from 'lucide-react';
+import React, { useState } from 'react';
+import { User, Phone, MapPin, Sprout, CheckCircle2, ChevronDown, Loader2 } from 'lucide-react';
+import { agentService } from '../../api/agentService';
 
 const OnboardFarmer = () => {
+  // UI State
   const [isCapturing, setIsCapturing] = useState(false);
   const [locationCaptured, setLocationCaptured] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // Form State
+  const [fullName, setFullName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [primaryCrop, setPrimaryCrop] = useState('');
+  const [coordinates, setCoordinates] = useState({ lat: 0, lng: 0 });
 
   const handleCaptureLocation = () => {
     setIsCapturing(true);
-    // Simulate GPS fetch delay
+    // Simulate getting GPS from mobile device
     setTimeout(() => {
       setIsCapturing(false);
+      // Hardcoded to a location in Rwanda for testing
+      setCoordinates({ lat: -1.9441, lng: 30.0619 }); 
       setLocationCaptured(true);
     }, 1500);
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSuccess(true);
-    // Reset after showing success screen
-    setTimeout(() => setSuccess(false), 3000);
+    setError('');
+    setLoading(true);
+
+    try {
+      await agentService.onboardFarmer({
+        fullName,
+        phoneNumber,
+        primaryCrop,
+        longitude: coordinates.lng,
+        latitude: coordinates.lat
+      });
+
+      setSuccess(true);
+      
+      // Reset form
+      setFullName('');
+      setPhoneNumber('');
+      setPrimaryCrop('');
+      setLocationCaptured(false);
+      
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.response?.data || "Failed to onboard farmer. Please check details.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (success) {
@@ -32,7 +68,7 @@ const OnboardFarmer = () => {
         <p className="text-gray-500 mb-8">The farmer has been successfully added to the CropConnect USSD system.</p>
         <button 
           onClick={() => setSuccess(false)}
-          className="w-full py-4 bg-gray-100 text-[#3E2723] rounded-xl font-bold"
+          className="w-full py-4 bg-gray-100 text-[#3E2723] rounded-xl font-bold hover:bg-gray-200 transition-colors"
         >
           Register Another Farmer
         </button>
@@ -52,6 +88,13 @@ const OnboardFarmer = () => {
       {/* FORM CONTENT */}
       <form onSubmit={handleRegister} className="px-6 py-6 space-y-6 flex-1 mb-20">
         
+        {/* Error Message Display */}
+        {error && (
+          <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl text-center font-medium">
+            {error}
+          </div>
+        )}
+
         {/* Personal Details */}
         <div className="space-y-4">
           <div>
@@ -63,6 +106,8 @@ const OnboardFarmer = () => {
               <input 
                 type="text" 
                 required
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
                 className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-2xl text-[17px] font-medium text-[#3E2723] focus:ring-2 focus:ring-[#2E7D32] focus:border-transparent transition-all shadow-sm"
                 placeholder="e.g. Jean-Baptiste N."
               />
@@ -82,6 +127,8 @@ const OnboardFarmer = () => {
                 <input 
                   type="tel" 
                   required
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
                   className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-2xl text-[17px] font-medium text-[#3E2723] focus:ring-2 focus:ring-[#2E7D32] focus:border-transparent transition-all shadow-sm"
                   placeholder="788 123 456"
                 />
@@ -96,8 +143,13 @@ const OnboardFarmer = () => {
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <Sprout className="w-5 h-5 text-[#2E7D32]" />
               </div>
-              <select required className="w-full pl-12 pr-10 py-4 bg-white border border-gray-200 rounded-2xl text-[17px] font-medium text-[#3E2723] focus:ring-2 focus:ring-[#2E7D32] focus:border-transparent transition-all shadow-sm appearance-none">
-                <option value="" disabled selected>Select main crop</option>
+              <select 
+                required 
+                value={primaryCrop}
+                onChange={(e) => setPrimaryCrop(e.target.value)}
+                className="w-full pl-12 pr-10 py-4 bg-white border border-gray-200 rounded-2xl text-[17px] font-medium text-[#3E2723] focus:ring-2 focus:ring-[#2E7D32] focus:border-transparent transition-all shadow-sm appearance-none"
+              >
+                <option value="" disabled>Select main crop</option>
                 <option value="maize">Maize</option>
                 <option value="beans">Beans</option>
                 <option value="coffee">Coffee</option>
@@ -123,7 +175,7 @@ const OnboardFarmer = () => {
                 </div>
                 <div>
                   <p className="font-bold text-[#2E7D32] text-sm">Location Saved</p>
-                  <p className="text-xs text-green-700 font-mono">-1.9441° S, 30.0619° E</p>
+                  <p className="text-xs text-green-700 font-mono">{coordinates.lat}° S, {coordinates.lng}° E</p>
                 </div>
               </div>
               <button type="button" onClick={() => setLocationCaptured(false)} className="text-xs font-bold text-green-700 underline">Retake</button>
@@ -150,10 +202,14 @@ const OnboardFarmer = () => {
         <div className="fixed bottom-[72px] left-0 right-0 w-full max-w-[420px] mx-auto p-4 bg-gradient-to-t from-[#F9F7F3] via-[#F9F7F3] to-transparent pb-6 z-40 pointer-events-none">
           <button 
             type="submit"
-            disabled={!locationCaptured}
+            disabled={!locationCaptured || loading}
             className="w-full py-4 bg-[#2E7D32] text-white rounded-2xl font-bold text-lg shadow-lg hover:bg-green-800 disabled:opacity-50 disabled:bg-gray-400 transition-all pointer-events-auto flex items-center justify-center gap-2"
           >
-            <User className="w-5 h-5" /> Register Farmer
+            {loading ? (
+              <><Loader2 className="w-5 h-5 animate-spin" /> Registering...</>
+            ) : (
+              <><User className="w-5 h-5" /> Register Farmer</>
+            )}
           </button>
         </div>
 
