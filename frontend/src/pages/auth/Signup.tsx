@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Building2, User as UserIcon, Check } from 'lucide-react';
+import { Building2, User as UserIcon, Check, Shield } from 'lucide-react';
 import { authService } from '../../api/authService';
 
 const Signup = () => {
   // UI State
-  const [role, setRole] = useState<'buyer' | 'agent'>('buyer');
+  const [role, setRole] = useState<'buyer' | 'agent' | 'admin'>('buyer');
   
   // Form State
   const [fullName, setFullName] = useState('');
@@ -44,7 +44,7 @@ const Signup = () => {
         fullName: fullName,
         phoneNumber: phoneNumber,
         passwordHash: password, // Using raw password here; ensure backend hashes it!
-        role: role === 'buyer' ? 'BUYER' : 'AGENT' // Use standard uppercase roles
+        role: role === 'buyer' ? 'BUYER' : role === 'agent' ? 'AGENT' : 'ADMIN' // Use standard uppercase roles
       };
 
       // 2. Call the register API
@@ -81,7 +81,7 @@ const Signup = () => {
       )}
 
       {/* ROLE SELECTION */}
-      <div className="grid grid-cols-2 gap-3 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
         <button
           type="button"
           onClick={() => setRole('buyer')}
@@ -104,6 +104,18 @@ const Signup = () => {
           <UserIcon className={`w-5 h-5 mb-2 ${role === 'agent' ? 'text-[#D97706]' : 'text-gray-400'}`} />
           <p className={`text-sm font-bold ${role === 'agent' ? 'text-[#3E2723]' : 'text-gray-500'}`}>Field Agent</p>
           {role === 'agent' && <div className="absolute top-3 right-3 w-4 h-4 bg-[#FBC02D] rounded-full flex items-center justify-center"><Check className="w-3 h-3 text-white" /></div>}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setRole('admin')}
+          className={`p-4 rounded-xl border-2 text-left transition-all relative overflow-hidden ${
+            role === 'admin' ? 'border-purple-600 bg-purple-50/50' : 'border-gray-200 hover:border-purple-200'
+          }`}
+        >
+          <Shield className={`w-5 h-5 mb-2 ${role === 'admin' ? 'text-purple-600' : 'text-gray-400'}`} />
+          <p className={`text-sm font-bold ${role === 'admin' ? 'text-[#3E2723]' : 'text-gray-500'}`}>System Admin</p>
+          {role === 'admin' && <div className="absolute top-3 right-3 w-4 h-4 bg-purple-600 rounded-full flex items-center justify-center"><Check className="w-3 h-3 text-white" /></div>}
         </button>
       </div>
 
