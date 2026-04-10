@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Wallet, ArrowDownToLine, Loader2 } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
-import { farmerService } from '../../api/farmerService';
-import type { FarmerOrder } from '../../api/farmerService';
+import axiosClient from '../../api/axiosClient';
 
 const Payments = () => {
-  const [orders, setOrders] = useState<FarmerOrder[]>([]);
+  const [totalEarnings, setTotalEarnings] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -13,11 +12,21 @@ const Payments = () => {
       try {
         const token = localStorage.getItem('jwt_token');
         if (!token) return;
-        const farmerId = (jwtDecode(token) as any).userId;
-        const data = await farmerService.getSalesHistory(farmerId);
-        setOrders(data);
+        const decoded: any = jwtDecode(token);
+        const farmerId = decoded.userId;
+        
+        // Fetch real orders for this specific farmer
+        const response = await axiosClient.get(`/orders/farmer/${farmerId}`);
+        const data = response.data || [];
+
+        // Calculate total earnings from all valid orders
+        const sum = data.reduce((acc: number, order: any) => {
+          return acc + (order.totalAmount || order.bidAmount || 0);
+        }, 0);
+
+        setTotalEarnings(sum);
       } catch (err) {
-        console.error(err);
+        console.error("Failed to load payments data:", err);
       } finally {
         setLoading(false);
       }
@@ -25,9 +34,11 @@ const Payments = () => {
     fetchPayments();
   }, []);
 
-  const totalEarnings = orders.reduce((sum, o) => sum + o.totalAmount, 0);
-
-  if (loading) return <div className="flex h-full items-center justify-center text-[#2E7D32] animate-pulse"><Loader2 className="w-6 h-6 animate-spin mr-2"/> Loading Wallet...</div>;
+  if (loading) return (
+    <div className="flex h-full items-center justify-center text-[#2E7D32] animate-pulse">
+      <Loader2 className="w-6 h-6 animate-spin mr-2"/> Loading Wallet...
+    </div>
+  );
 
   return (
     <div className="max-w-4xl mx-auto p-6 animate-in fade-in duration-500">
@@ -46,7 +57,7 @@ const Payments = () => {
         </h2>
         <p className="text-green-100 text-sm relative z-10">Funds are ready for withdrawal to Mobile Money.</p>
         
-        <button className="mt-8 relative z-10 bg-white text-[#2E7D32] px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-green-50 transition-colors shadow-sm">
+        <button className="mt-8 relative z-10 bg-white text-[#2E7D32] px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-green-50 transition-colors shadow-sm cursor-pointer">
           <ArrowDownToLine className="w-4 h-4"/> Withdraw to MoMo
         </button>
       </div>
