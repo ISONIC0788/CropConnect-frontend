@@ -1,16 +1,89 @@
-    import { useState } from 'react';
-import { Star, Search, Trash2, ShoppingCart } from 'lucide-react';
-import { cropListings } from '../../data/mockBuyerData';
+import React, { useState, useEffect } from 'react';
+import { Star, Search, Trash2, ShoppingCart, Loader2, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 import InventoryCard from '../../components/buyer/InventoryCard';
+import axiosClient from '../../api/axiosClient';
 
 const Watchlist = () => {
-  // Simulate having a few items already saved to the watchlist
-  const [savedIds, setSavedIds] = useState<string[]>(['LST-002', 'LST-004', 'LST-005']);
+  const navigate = useNavigate();
+  
+  // Real Data State
+  const [savedIds, setSavedIds] = useState<string[]>(() => {
+    const local = localStorage.getItem('watchlist_ids');
+    return local ? JSON.parse(local) : []; // Empty by default unless saved previously
+  });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  const [listings, setListings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isBidding, setIsBidding] = useState(false);
+  const [marketTrends, setMarketTrends] = useState<Record<string, number>>({});
 
-  // Filter the saved listings based on the search query
-  const savedListings = cropListings.filter(listing => 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // 1. Fetch real listings
+        const response = await axiosClient.get('/listings');
+        const backendData: any[] = response.data;
+        
+        // Map backend data to the frontend structure
+        const mappedData = backendData
+          .filter(item => item.isVerified && item.status === 'ACTIVE')
+          .map(item => ({
+            id: item.listingId,
+            crop: item.cropType,
+            grade: "Standard",
+            quantity: item.quantityKg,
+            unit: "kg",
+            pricePerKg: item.pricePerKg,
+            farmer: item.farmer?.fullName || "Registered Farmer",
+            district: "Rwanda", 
+            verified: item.isVerified,
+            coordinates: {
+              lat: item.location?.latitude || 0,
+              lng: item.location?.longitude || 0
+            },
+            distance: 0 // Not needed for watchlist
+          }));
+          
+        setListings(mappedData);
+
+        // 2. Fetch Market Trends for crops currently in the watchlist
+        const savedCrops = mappedData.filter(l => savedIds.includes(l.id)).map(l => l.crop);
+        const uniqueCrops = [...new Set(savedCrops)];
+        
+        const trends: Record<string, number> = {};
+        for (const crop of uniqueCrops) {
+          try {
+            const trendRes = await axiosClient.get(`/listings/market-price`, { params: { cropType: crop, days: 30 } });
+            if (trendRes.data && trendRes.data.averagePrice) {
+              trends[crop] = trendRes.data.averagePrice;
+            }
+          } catch (e) {
+            console.error(`Failed to fetch trend for ${crop}`, e);
+          }
+        }
+        setMarketTrends(trends);
+
+      } catch (error) {
+        console.error("Failed to fetch watchlist data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [savedIds]); // Re-fetch trends if items are added/removed
+
+  // Sync saved items to local storage
+  useEffect(() => {
+    localStorage.setItem('watchlist_ids', JSON.stringify(savedIds));
+  }, [savedIds]);
+
+  // Derived State: Filter the saved listings based on search query
+  const savedListings = listings.filter(listing => 
     savedIds.includes(listing.id) &&
     (searchQuery === '' || 
      listing.crop.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -27,8 +100,35 @@ const Watchlist = () => {
     setSelectedIds([]); // Clear selection after removing
   };
 
+  const handlePlaceBulkBid = async () => {
+    if (selectedIds.length === 0) return;
+    setIsBidding(true);
+
+    try {
+      const token = localStorage.getItem('jwt_token');
+      if (!token) throw new Error("Not logged in");
+      const decoded: any = jwtDecode(token);
+      const buyerId = decoded.userId;
+
+      const bidPromises = selectedItems.map(item => {
+        const totalBidAmount = item.pricePerKg * item.quantity;
+        return axiosClient.post(`/bids/listing/${item.id}/buyer/${buyerId}`, { bidAmount: totalBidAmount });
+      });
+
+      await Promise.all(bidPromises);
+      alert("Bids placed successfully! Redirecting to your Escrow Wallet.");
+      navigate('/buyer/wallet');
+      removeSelected(); // Clear them from watchlist since they are now orders
+    } catch (error) {
+      console.error("Failed to place bulk bids:", error);
+      alert("Error placing bids. Make sure you are logged in as a Buyer.");
+    } finally {
+      setIsBidding(false);
+    }
+  };
+
   // Calculate totals for the selected items
-  const selectedItems = cropListings.filter(l => selectedIds.includes(l.id));
+  const selectedItems = listings.filter(l => selectedIds.includes(l.id));
   const totalVolume = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
   const totalCost = selectedItems.reduce((sum, item) => sum + (item.quantity * item.pricePerKg), 0);
 
@@ -42,9 +142,21 @@ const Watchlist = () => {
             <Star className="w-6 h-6 text-[#FBC02D] fill-current" />
             Saved Inventory
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 mt-1 mb-2">
             You have <span className="font-bold text-[#2E7D32]">{savedIds.length}</span> items in your watchlist.
           </p>
+          
+          {/* Dynamic Market Trends Badges */}
+          {Object.keys(marketTrends).length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2 animate-in fade-in">
+              {Object.entries(marketTrends).map(([crop, price]) => (
+                <span key={crop} className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-md bg-blue-50 text-[#3498DB] border border-blue-100">
+                  <TrendingUp className="w-3 h-3" />
+                  {crop} Market Avg: {price.toLocaleString()} RWF/kg
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Search Bar */}
@@ -61,7 +173,12 @@ const Watchlist = () => {
       </div>
 
       {/* Grid Layout for Watchlist Items */}
-      {savedListings.length > 0 ? (
+      {loading ? (
+        <div className="flex-1 flex flex-col items-center justify-center text-[#2E7D32]">
+          <Loader2 className="w-8 h-8 animate-spin mb-2" />
+          <p className="font-bold">Syncing your watchlist...</p>
+        </div>
+      ) : savedListings.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {savedListings.map(listing => (
             <InventoryCard 
@@ -80,7 +197,7 @@ const Watchlist = () => {
           </div>
           <h3 className="font-serif text-xl font-bold text-[#3E2723] mb-2">Your watchlist is empty</h3>
           <p className="text-gray-500 max-w-md">
-            Crops you save from the Sourcing Map will appear here so you can easily track and bid on them later.
+            Click the star icon on crops from the Sourcing Map to save them here for quick tracking and bidding!
           </p>
         </div>
       )}
@@ -107,14 +224,19 @@ const Watchlist = () => {
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <button 
               onClick={removeSelected}
-              className="flex-1 sm:flex-none bg-red-50 hover:bg-red-100 text-red-600 px-4 py-3.5 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+              disabled={isBidding}
+              className="flex-1 sm:flex-none bg-red-50 hover:bg-red-100 text-red-600 px-4 py-3.5 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
             >
               <Trash2 className="w-4 h-4" />
               <span className="hidden md:inline">Remove</span>
             </button>
-            <button className="flex-1 sm:flex-none bg-[#2E7D32] hover:bg-green-800 text-white px-6 py-3.5 rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 whitespace-nowrap">
-              <ShoppingCart className="w-4 h-4" />
-              Bid on Selected
+            <button 
+              onClick={handlePlaceBulkBid}
+              disabled={isBidding}
+              className="flex-1 sm:flex-none bg-[#2E7D32] hover:bg-green-800 text-white px-6 py-3.5 rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isBidding ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShoppingCart className="w-4 h-4" />}
+              {isBidding ? 'Placing Bids...' : 'Bid on Selected'}
             </button>
           </div>
 

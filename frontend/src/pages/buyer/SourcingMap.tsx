@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import InventoryCard from '../../components/buyer/InventoryCard';
 import { buyerService } from '../../api/buyerService';
+import axiosClient from '../../api/axiosClient';
 
 // The shape that InventoryCard expects
 export interface FrontendCropListing {
@@ -50,8 +51,22 @@ const SourcingMap = () => {
 
   useEffect(() => {
     const fetchRealData = async () => {
+      setLoading(true);
       try {
-        const backendData = await buyerService.getAllListings();
+        // Construct query parameters for the backend filter endpoint
+        const params: any = {
+          longitude: WAREHOUSE_LNG,
+          latitude: WAREHOUSE_LAT,
+          radiusKm: radius
+        };
+
+        if (selectedCrop !== 'All Crops') {
+          params.cropType = selectedCrop;
+        }
+
+        // Call the filter endpoint
+        const response = await axiosClient.get('/listings/filter', { params });
+        const backendData: any[] = response.data;
         
         // Map backend data to the frontend structure
         const mappedData: FrontendCropListing[] = backendData
@@ -78,14 +93,19 @@ const SourcingMap = () => {
           
         setListings(mappedData);
       } catch (error) {
-        console.error("Failed to load listings:", error);
+        console.error("Failed to load filtered listings:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchRealData();
-  }, []);
+    // Debounce the API call so we don't spam the server while dragging the slider
+    const delayDebounceFn = setTimeout(() => {
+      fetchRealData();
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [radius, selectedCrop]); // Re-fetch automatically when radius or crop changes
 
   // THE FIX: The function that handles the Bulk Bid button click
   const handlePlaceBulkBid = async () => {
@@ -122,15 +142,11 @@ const SourcingMap = () => {
   };
 
   // Derived State: Filter the listings based on map criteria
+  // Only search query remains here since crop and radius are handled by backend
   const filteredListings = listings.filter((listing) => {
-    const matchesRadius = listing.distance <= radius;
-    const matchesCrop = selectedCrop === 'All Crops' || listing.crop.toLowerCase().includes(selectedCrop.toLowerCase());
-    const matchesSearch = 
-      searchQuery === '' || 
+    return searchQuery === '' || 
       listing.crop.toLowerCase().includes(searchQuery.toLowerCase()) ||
       listing.farmer.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    return matchesRadius && matchesCrop && matchesSearch;
   });
 
   // Calculate Bulk Aggregation Totals

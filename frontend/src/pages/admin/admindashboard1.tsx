@@ -1,50 +1,112 @@
-import { MessageSquare, Server, ShieldCheck, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Users, ShoppingCart, ShieldCheck, Clock, MessageSquare, Loader2 } from 'lucide-react';
 import SMSChart from '../../components/admin/SMSChart';
 import KPICard from '../../components/admin/KPICard';
+import axiosClient from '../../api/axiosClient';
 
 const admindashboard1 = () => {
-  // 1. Array for the KPI Cards Data
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalOrders: 0,
+    escrowVolume: 0,
+    pendingVerifications: 0
+  });
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        // Fetch global platform stats
+        const [usersRes, ordersRes, pendingRes] = await Promise.all([
+          axiosClient.get('/users'),
+          axiosClient.get('/orders'),
+          axiosClient.get('/listings/pending')
+        ]);
+
+        const users = usersRes.data || [];
+        const orders = ordersRes.data || [];
+        const pending = pendingRes.data || [];
+
+        // Calculate total escrow volume from orders
+        const totalEscrow = orders.reduce((sum: number, order: any) => sum + (order.totalAmount || order.bidAmount || 0), 0);
+
+        setStats({
+          totalUsers: users.length,
+          totalOrders: orders.length,
+          escrowVolume: totalEscrow,
+          pendingVerifications: pending.length
+        });
+
+        // Generate Recent Activity from real orders (Top 4 most recent)
+        const recentOrders = [...orders]
+          .sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+          .slice(0, 4)
+          .map((order: any, idx: number) => ({
+            id: order.orderId || idx,
+            icon: <ShieldCheck className="w-4 h-4 text-primary" />,
+            text: `Order ${order.orderId ? order.orderId.substring(0, 8).toUpperCase() : 'Unknown'} processed for ${Number(order.totalAmount || order.bidAmount || 0).toLocaleString()} RWF`,
+            time: order.createdAt ? new Date(order.createdAt).toLocaleString() : 'Just now',
+            type: order.status === 'COMPLETED' ? 'success' : 'info'
+          }));
+
+        // Fallback if no orders exist yet
+        if (recentOrders.length === 0) {
+          recentOrders.push({
+            id: 'system-1',
+            icon: <ShieldCheck className="w-4 h-4 text-primary" />,
+            text: "System initialized and waiting for new transactions.",
+            time: new Date().toLocaleString(),
+            type: 'success'
+          });
+        }
+        
+        setRecentActivity(recentOrders);
+
+      } catch (error) {
+        console.error("Failed to fetch admin stats:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboardData();
+  }, []);
+
+  // 1. Array for the KPI Cards Data dynamically mapped
   const kpiData = [
     {
-      title: "SMS Gateway Latency",
-      icon: <MessageSquare className="w-5 h-5 text-blue-500" />,
-      value: "1.2s",
-      trendValue: "+0.1s",
+      title: "Total Platform Users",
+      icon: <Users className="w-5 h-5 text-blue-500" />,
+      value: loading ? "..." : stats.totalUsers.toString(),
+      trendValue: "All Time",
       trendDirection: "up" as const,
-      trendColorClass: "text-gray-500"
+      trendColorClass: "text-primary"
     },
     {
-      title: "Server Uptime",
-      icon: <Server className="w-5 h-5 text-primary" />,
-      value: "99.92%",
-      trendValue: "+0.04%",
+      title: "Total Orders",
+      icon: <ShoppingCart className="w-5 h-5 text-primary" />,
+      value: loading ? "..." : stats.totalOrders.toString(),
+      trendValue: "All Time",
       trendDirection: "up" as const,
       trendColorClass: "text-primary"
     },
     {
       title: "Active Escrow Volume",
       icon: <ShieldCheck className="w-5 h-5 text-accent" />,
-      value: "12,547,000 RWF",
-      trendValue: "+2.1M",
+      value: loading ? "..." : `${stats.escrowVolume.toLocaleString()} RWF`,
+      trendValue: "Secured",
       trendDirection: "up" as const,
       trendColorClass: "text-primary"
     },
     {
-      title: "Pending KYC Approvals",
+      title: "Pending Verifications",
       icon: <Clock className="w-5 h-5 text-red-500" />,
-      value: "4",
-      trendValue: "-2",
-      trendDirection: "down" as const,
-      trendColorClass: "text-primary"
+      value: loading ? "..." : stats.pendingVerifications.toString(),
+      trendValue: stats.pendingVerifications > 0 ? "Action Required" : "All Clear",
+      trendDirection: stats.pendingVerifications > 0 ? ("down" as const) : ("up" as const),
+      trendColorClass: stats.pendingVerifications > 0 ? "text-red-500" : "text-primary"
     }
-  ];
-
-  // 2. Array for Recent Activity
-  const recentActivity = [
-    { id: 1, icon: <ShieldCheck className="w-4 h-4 text-primary" />, text: "New Institutional buyer registered: East Africa Commodities", time: "2026-03-20 14:32", type: "success" },
-    { id: 2, icon: <MessageSquare className="w-4 h-4 text-blue-500" />, text: "Agent David Mugisha assigned to Sector B, Musanze", time: "2026-03-20 13:15", type: "info" },
-    { id: 3, icon: <ShieldCheck className="w-4 h-4 text-primary" />, text: "Escrow of 1,240,000 RWF released for TXN-20260318-0112", time: "2026-03-20 11:48", type: "success" },
-    { id: 4, icon: <Clock className="w-4 h-4 text-accent" />, text: "Dispute filed on TXN-20260312-0091 — moisture quality issue", time: "2026-03-20 10:05", type: "warning" },
   ];
 
   return (
@@ -86,7 +148,10 @@ const admindashboard1 = () => {
 
         {/* Recent Activity Feed */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex flex-col">
-          <h3 className="font-serif font-bold text-brown mb-6">Recent Activity</h3>
+          <h3 className="font-serif font-bold text-brown mb-6 flex items-center justify-between">
+            <span>Recent Activity</span>
+            {loading && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+          </h3>
           
           <div className="flex-1 overflow-y-auto pr-2 space-y-6">
             {recentActivity.map((activity) => (

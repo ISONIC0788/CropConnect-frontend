@@ -1,79 +1,94 @@
-import { Clock, Shield, CheckCircle2, Truck, Package, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Clock, Shield, CheckCircle2, Truck, Package, ArrowRight, Loader2 } from 'lucide-react';
+import { jwtDecode } from 'jwt-decode';
+import axiosClient from '../../api/axiosClient';
 
-// --- MOCK DATA ---
-const pipelineStages = [
-  { id: 'pending', label: 'Pending Acceptance', icon: <Clock className="w-6 h-6" />, color: 'text-gray-500', count: 1 },
-  { id: 'locked', label: 'Inventory Locked', icon: <Shield className="w-6 h-6" />, color: 'text-[#FBC02D]', count: 1 },
-  { id: 'quality', label: 'Quality Check', icon: <CheckCircle2 className="w-6 h-6" />, color: 'text-[#3498DB]', count: 1 },
-  { id: 'transit', label: 'In Transit', icon: <Truck className="w-6 h-6" />, color: 'text-[#2E7D32]', count: 1 },
-  { id: 'delivered', label: 'Delivered', icon: <Package className="w-6 h-6" />, color: 'text-[#166534]', count: 1 }
-];
-
-const mockOrders = [
-  {
-    id: 'ORD-0042',
-    crop: 'Maize (Grade A)',
-    status: 'In Transit',
-    stageIndex: 3, // 0-indexed corresponding to pipelineStages
-    farmer: 'Jean-Pierre Habimana',
-    district: 'Musanze',
-    amount: '800,000 RWF',
-    weight: '2,500 kg',
-    date: '2026-03-18',
-    statusBadge: 'bg-green-50 text-[#2E7D32]'
-  },
-  {
-    id: 'ORD-0045',
-    crop: 'Coffee (Washed)',
-    status: 'Quality Check',
-    stageIndex: 2,
-    farmer: 'Marie-Claire Uwimana',
-    district: 'Huye',
-    amount: '2,240,000 RWF',
-    weight: '800 kg',
-    date: '2026-03-17',
-    statusBadge: 'bg-blue-50 text-[#3498DB]'
-  },
-  {
-    id: 'ORD-0048',
-    crop: 'Red Beans',
-    status: 'Locked',
-    stageIndex: 1,
-    farmer: 'Aline Ingabire',
-    district: 'Rubavu',
-    amount: '612,000 RWF',
-    weight: '900 kg',
-    date: '2026-03-19',
-    statusBadge: 'bg-[#FFF9E6] text-[#FBC02D]'
-  },
-  {
-    id: 'ORD-0051',
-    crop: 'Maize',
-    status: 'Delivered',
-    stageIndex: 4,
-    farmer: 'Claudine Mukamana',
-    district: 'Rwamagana',
-    amount: '930,000 RWF',
-    weight: '3,000 kg',
-    date: '2026-03-14',
-    statusBadge: 'bg-green-100 text-[#166534]'
-  },
-  {
-    id: 'ORD-0053',
-    crop: 'Sorghum',
-    status: 'Pending',
-    stageIndex: 0,
-    farmer: 'Vestine Nyiraneza',
-    district: 'Ngoma',
-    amount: '810,000 RWF',
-    weight: '1,200 kg',
-    date: '2026-03-20',
-    statusBadge: 'bg-gray-100 text-gray-500'
+// --- HELPER FUNCTIONS FOR MAPPING BACKEND DATA ---
+const getStageIndex = (status: string) => {
+  switch (status?.toUpperCase()) {
+    case 'PENDING': return 0;
+    case 'LOCKED': case 'ACCEPTED': return 1;
+    case 'QUALITY_CHECK': return 2;
+    case 'IN_TRANSIT': return 3;
+    case 'DELIVERED': case 'COMPLETED': return 4;
+    default: return 0;
   }
-];
+};
 
-// --- MAIN COMPONENT ---
+const getStatusDisplay = (status: string) => {
+  switch (status?.toUpperCase()) {
+    case 'PENDING': return { label: 'Pending', badge: 'bg-gray-100 text-gray-500' };
+    case 'LOCKED': case 'ACCEPTED': return { label: 'Locked', badge: 'bg-[#FFF9E6] text-[#FBC02D]' };
+    case 'QUALITY_CHECK': return { label: 'Quality Check', badge: 'bg-blue-50 text-[#3498DB]' };
+    case 'IN_TRANSIT': return { label: 'In Transit', badge: 'bg-green-50 text-[#2E7D32]' };
+    case 'DELIVERED': case 'COMPLETED': return { label: 'Delivered', badge: 'bg-green-100 text-[#166534]' };
+    default: return { label: status || 'Unknown', badge: 'bg-gray-100 text-gray-500' };
+  }
+};
+
 const ActiveOrders = () => {
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBuyerOrders = async () => {
+      try {
+        setLoading(true);
+        // 1. Get logged-in buyer ID
+        const token = localStorage.getItem('jwt_token');
+        if (!token) throw new Error("Not logged in");
+        const decoded: any = jwtDecode(token);
+        const buyerId = decoded.userId;
+
+        // 2. Fetch all orders (we filter on the client as requested, or backend if pre-filtered)
+        const response = await axiosClient.get('/orders');
+        const rawOrders = response.data;
+
+        // 3. Filter for this specific buyer and map to frontend shape
+        const mappedOrders = rawOrders
+          .filter((order: any) => order.buyer?.userId === buyerId)
+          .map((order: any) => {
+            const statusInfo = getStatusDisplay(order.status);
+            return {
+              id: order.orderId ? `ORD-${order.orderId.substring(0, 4).toUpperCase()}` : 'ORD-????',
+              crop: order.listing?.cropType || 'Unknown Crop',
+              status: statusInfo.label,
+              stageIndex: getStageIndex(order.status),
+              farmer: order.listing?.farmer?.fullName || 'Registered Farmer',
+              district: 'Rwanda', // Using default unless postGIS exact region mapping is available
+              amount: `${(order.totalAmount || order.bidAmount || 0).toLocaleString()} RWF`,
+              weight: `${(order.listing?.quantityKg || 0).toLocaleString()} kg`,
+              date: order.createdAt ? new Date(order.createdAt).toISOString().split('T')[0] : 'Just now',
+              statusBadge: statusInfo.badge
+            };
+          });
+
+        // 4. Sort by date descending (newest first)
+        mappedOrders.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        setOrders(mappedOrders);
+
+      } catch (error) {
+        console.error("Failed to fetch active orders:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBuyerOrders();
+  }, []);
+
+  // Compute dynamic pipeline counts from real data
+  const pipelineStages = [
+    { id: 'pending', stageIndex: 0, label: 'Pending Acceptance', icon: <Clock className="w-6 h-6" />, color: 'text-gray-500' },
+    { id: 'locked', stageIndex: 1, label: 'Inventory Locked', icon: <Shield className="w-6 h-6" />, color: 'text-[#FBC02D]' },
+    { id: 'quality', stageIndex: 2, label: 'Quality Check', icon: <CheckCircle2 className="w-6 h-6" />, color: 'text-[#3498DB]' },
+    { id: 'transit', stageIndex: 3, label: 'In Transit', icon: <Truck className="w-6 h-6" />, color: 'text-[#2E7D32]' },
+    { id: 'delivered', stageIndex: 4, label: 'Delivered', icon: <Package className="w-6 h-6" />, color: 'text-[#166534]' }
+  ].map(stage => ({
+    ...stage,
+    count: orders.filter(o => o.stageIndex === stage.stageIndex).length
+  }));
+
   return (
     <div className="max-w-6xl mx-auto pb-12 flex flex-col h-full space-y-6">
       
@@ -92,7 +107,7 @@ const ActiveOrders = () => {
               <div>{stage.icon}</div>
               <div className="flex flex-col justify-center">
                 <span className="text-[13px] font-bold mb-0.5">{stage.label}</span>
-                <span className="text-xl font-bold leading-none">{stage.count}</span>
+                <span className="text-xl font-bold leading-none">{loading ? '-' : stage.count}</span>
               </div>
             </div>
             
@@ -107,8 +122,23 @@ const ActiveOrders = () => {
       </div>
 
       {/* ORDER CARDS LIST */}
-      <div className="flex-1 space-y-4">
-        {mockOrders.map(order => (
+      <div className="flex-1 space-y-4 relative">
+        {loading && (
+          <div className="absolute inset-0 bg-[#F9F7F3]/50 z-10 flex flex-col items-center pt-10 text-[#2E7D32]">
+            <Loader2 className="w-8 h-8 animate-spin mb-2" />
+            <p className="font-bold">Syncing order pipeline...</p>
+          </div>
+        )}
+
+        {!loading && orders.length === 0 && (
+          <div className="text-center py-16 text-gray-400 bg-white rounded-xl border border-gray-200 shadow-sm">
+            <Package className="w-12 h-12 mx-auto mb-3 opacity-20" />
+            <p className="font-medium">You have no active orders.</p>
+            <p className="text-sm mt-1">Head to the Sourcing Map to place bids on verified inventory.</p>
+          </div>
+        )}
+
+        {orders.map(order => (
           <div key={order.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 hover:shadow-md transition-shadow cursor-pointer">
             
             {/* Top Info Row */}

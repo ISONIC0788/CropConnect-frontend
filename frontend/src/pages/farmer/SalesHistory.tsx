@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { History, PackageCheck, Loader2 } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
-import { farmerService } from '../../api/farmerService';
-import type { FarmerOrder } from '../../api/farmerService';
+import axiosClient from '../../api/axiosClient';
 
 const SalesHistory = () => {
-  const [orders, setOrders] = useState<FarmerOrder[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -13,10 +12,25 @@ const SalesHistory = () => {
       try {
         const token = localStorage.getItem('jwt_token');
         if (!token) return;
-        const farmerId = (jwtDecode(token) as any).userId;
+        const decoded: any = jwtDecode(token);
+        const farmerId = decoded.userId;
         
-        const data = await farmerService.getSalesHistory(farmerId);
-        setOrders(data);
+        // Fetch real orders for this specific farmer
+        const response = await axiosClient.get(`/orders/farmer/${farmerId}`);
+        const data = response.data || [];
+        
+        // Ensure robust mapping from backend Order.java to frontend UI
+        const mappedOrders = data.map((order: any) => ({
+          orderId: order.orderId,
+          cropType: order.listing?.cropType || 'Unknown Crop',
+          quantityKg: order.listing?.quantityKg || 0,
+          buyerName: order.buyer?.fullName || 'Registered Buyer',
+          buyerPhone: order.buyer?.phoneNumber || 'No phone provided',
+          amount: order.totalAmount || order.bidAmount || 0,
+          status: order.status || 'COMPLETED'
+        }));
+
+        setOrders(mappedOrders);
       } catch (err) {
         console.error("Failed to load history", err);
       } finally {
@@ -26,7 +40,11 @@ const SalesHistory = () => {
     fetchHistory();
   }, []);
 
-  if (loading) return <div className="flex h-full items-center justify-center text-[#2E7D32] animate-pulse"><Loader2 className="w-6 h-6 animate-spin mr-2"/> Loading Records...</div>;
+  if (loading) return (
+    <div className="flex h-full items-center justify-center text-[#2E7D32] animate-pulse">
+      <Loader2 className="w-6 h-6 animate-spin mr-2"/> Loading Records...
+    </div>
+  );
 
   return (
     <div className="max-w-4xl mx-auto p-6 animate-in fade-in duration-500">
@@ -55,19 +73,19 @@ const SalesHistory = () => {
               {orders.map((order) => (
                 <tr key={order.orderId} className="border-b border-gray-50 hover:bg-green-50/50 transition-colors">
                   <td className="p-4">
-                    <p className="font-bold text-[#3E2723]">{order.listing.quantityKg}kg {order.listing.cropType}</p>
-                    <p className="text-xs text-gray-400 mt-1">Order #{order.orderId.substring(0,8)}</p>
+                    <p className="font-bold text-[#3E2723]">{order.quantityKg}kg {order.cropType}</p>
+                    <p className="text-xs text-gray-400 mt-1">Order #{order.orderId ? order.orderId.substring(0,8).toUpperCase() : 'UNKNOWN'}</p>
                   </td>
                   <td className="p-4">
-                    <p className="font-bold text-[#3E2723]">{order.buyer.fullName}</p>
-                    <p className="text-xs text-gray-400">{order.buyer.phoneNumber}</p>
+                    <p className="font-bold text-[#3E2723]">{order.buyerName}</p>
+                    <p className="text-xs text-gray-400">{order.buyerPhone}</p>
                   </td>
                   <td className="p-4 text-right font-bold text-[#2E7D32]">
-                    {order.totalAmount.toLocaleString()}
+                    {Number(order.amount).toLocaleString()}
                   </td>
                   <td className="p-4 text-center">
                     <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                      <PackageCheck className="w-3 h-3"/> {order.orderStatus}
+                      <PackageCheck className="w-3 h-3"/> {order.status}
                     </span>
                   </td>
                 </tr>

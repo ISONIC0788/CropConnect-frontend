@@ -23,21 +23,20 @@ export interface FarmerBid {
 }
 
 export const farmerService = {
-  // 1. Get Farmer's Inventory from the backend
+  // Get listings belonging to a specific farmer
   getMyListings: async (farmerId: string): Promise<FarmerListing[]> => {
     const response = await axiosClient.get(`/listings/farmer/${farmerId}`);
     return response.data;
   },
 
-  // 2. Get incoming bids for this farmer's listings
+  // Get all incoming bids for a specific farmer's listings
   getIncomingBids: async (farmerId: string): Promise<FarmerBid[]> => {
     const response = await axiosClient.get(`/bids/farmer/${farmerId}`);
     return response.data;
   },
 
-  // 3. Accept a bid (This triggers the Order creation and Listing lock in BidService.java)
-  acceptBid: async (bidId: string) => {
-    const response = await axiosClient.put(`/bids/${bidId}/accept`);
-    return response.data;
+  // Accept an incoming bid
+  acceptBid: async (bidId: string): Promise<void> => {
+    await axiosClient.put(`/bids/${bidId}/accept`);
   }
 };
