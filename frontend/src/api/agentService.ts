@@ -44,9 +44,13 @@ export const agentService = {
     return response.data;
   },
 
-  // 5. Mark a listing as verified
-  verifyListing: async (listingId: string) => {
-    const response = await axiosClient.put(`/listings/${listingId}/verify`);
+  // 5. Mark a listing as verified (with Geolocation and Photo payload)
+  verifyListing: async (listingId: string, formData: FormData) => {
+    const response = await axiosClient.put(`/listings/${listingId}/verify`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   }
 };

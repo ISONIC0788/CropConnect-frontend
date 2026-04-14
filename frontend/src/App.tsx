@@ -24,6 +24,7 @@ import UserManagement from './pages/admin/UserManagement'
 import DisputeArbitration from './pages/admin/DisputeArbitration'
 import SystemHealth from './pages/admin/SystemHealth'
 import Settings from './pages/admin/Settings'
+import AuditLogPage from './pages/admin/AuditLogPage'
 
 // --- BUYER COMPONENTS ---
 import BuyerLayout from './layouts/BuyerLayout'
@@ -59,6 +60,15 @@ const LandingPage = () => (
   </main>
 );
 
+import { useEffect } from 'react';
+const LogoutRoute = () => {
+  useEffect(() => {
+    localStorage.removeItem('jwt_token');
+    window.location.href = '/login';
+  }, []);
+  return null;
+};
+
 function App() {
   return (
     <Router>
@@ -74,6 +84,7 @@ function App() {
         <Route path="/admin/disputes" element={<ProtectedRoute allowedRoles={[Role.ADMIN, `ROLE_${Role.ADMIN}`]}><AdminLayout><DisputeArbitration /></AdminLayout></ProtectedRoute>} />
         <Route path="/admin/health" element={<ProtectedRoute allowedRoles={[Role.ADMIN, `ROLE_${Role.ADMIN}`]}><AdminLayout><SystemHealth /></AdminLayout></ProtectedRoute>} />
         <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={[Role.ADMIN, `ROLE_${Role.ADMIN}`]}><AdminLayout><Settings /></AdminLayout></ProtectedRoute>} />
+        <Route path="/admin/audit-logs" element={<ProtectedRoute allowedRoles={[Role.ADMIN, `ROLE_${Role.ADMIN}`]}><AdminLayout><AuditLogPage /></AdminLayout></ProtectedRoute>} />
 
         {/* Buyer Routes - Protected */}
         <Route path="/buyer" element={<ProtectedRoute allowedRoles={[Role.BUYER, `ROLE_${Role.BUYER}`]}><BuyerLayout><SourcingMap /></BuyerLayout></ProtectedRoute>} />
@@ -113,14 +124,7 @@ function App() {
         } />
 
         {/* Logout Route - Redirects to Login */}
-        <Route path="/logout" element={
-          <div onClick={() => {
-            localStorage.removeItem('jwt_token');
-            window.location.href = '/login';
-          }}>
-            <Navigate to="/login" replace />
-          </div>
-        } />
+        <Route path="/logout" element={<LogoutRoute />} />
       </Routes>
     </Router>
   )
