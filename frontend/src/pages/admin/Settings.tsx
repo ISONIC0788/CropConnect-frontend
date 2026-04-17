@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import { Globe, Bell, Shield, Database } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Globe, Bell, Shield, Database, User as UserIcon, Eye, EyeOff, Loader2, X } from 'lucide-react';
+import { jwtDecode } from 'jwt-decode';
+import axiosClient from '../../api/axiosClient';
 
 // --- REUSABLE UI COMPONENTS ---
 
@@ -21,18 +23,45 @@ const Toggle = ({ enabled, onChange }: { enabled: boolean, onChange: () => void 
 );
 
 // 2. Form Input Row
-const InputRow = ({ label, type = "text", value }: { label: string, type?: string, value: string }) => (
-  <div className="flex flex-col md:flex-row md:items-center justify-between py-4 border-b border-gray-50 last:border-0 gap-4">
-    <label className="text-sm font-medium text-gray-600 w-full md:w-1/3">{label}</label>
-    <div className="w-full md:w-2/3 max-w-md">
-      <input
-        type={type}
-        defaultValue={value}
-        className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-gray-800 bg-white"
-      />
+const InputRow = ({ label, type = "text", value, onChange, readOnly = false }: { label: string, type?: string, value: string, onChange?: (val: string) => void, readOnly?: boolean }) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const inputType = type === 'password' ? (readOnly ? 'password' : (showPassword ? 'text' : 'password')) : type;
+
+  return (
+    <div className="flex flex-col md:flex-row md:items-center justify-between py-4 border-b border-gray-50 last:border-0 gap-4">
+      <label className="text-sm font-medium text-gray-600 w-full md:w-1/3">{label}</label>
+      <div className="w-full md:w-2/3 max-w-md relative">
+        {onChange ? (
+          <input
+            type={inputType}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            readOnly={readOnly}
+            className={`w-full px-4 py-2.5 ${!readOnly && type === 'password' ? 'pr-10' : ''} rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-gray-800 ${readOnly ? 'bg-gray-50 text-gray-400 cursor-not-allowed cursor-default focus:ring-0 focus:border-gray-200' : 'bg-white'}`}
+          />
+        ) : (
+          <input
+            type={inputType}
+            defaultValue={value}
+            key={value}
+            readOnly={readOnly || true}
+            className={`w-full px-4 py-2.5 ${!readOnly && type === 'password' ? 'pr-10' : ''} rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-gray-800 bg-gray-50 text-gray-400 cursor-not-allowed cursor-default focus:ring-0 focus:border-gray-200`}
+          />
+        )}
+        {type === 'password' && !readOnly && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            tabIndex={-1}
+          >
+            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // 3. Toggle Action Row
 const ToggleRow = ({ label, enabled, onChange }: { label: string, enabled: boolean, onChange: () => void }) => (
@@ -65,6 +94,69 @@ const SectionCard = ({ icon, title, subtitle, children }: { icon: React.ReactNod
 
 // --- MAIN PAGE COMPONENT ---
 const Settings = () => {
+  const [adminUser, setAdminUser] = useState<any>(null);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  useEffect(() => {
+    const fetchAdmin = async () => {
+      try {
+        const token = localStorage.getItem('jwt_token');
+        if (token) {
+          const decoded: any = jwtDecode(token);
+          const response = await axiosClient.get(`/users/${decoded.userId}`);
+          setAdminUser(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch admin profile", error);
+      }
+    };
+    fetchAdmin();
+  }, []);
+
+  const handleProfileChange = (field: string, value: string) => {
+    setAdminUser((prev: any) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      setIsSavingProfile(true);
+      const decoded: any = jwtDecode(localStorage.getItem('jwt_token') || '');
+      await axiosClient.put(`/users/${decoded.userId}`, {
+        phoneNumber: adminUser.phoneNumber,
+        fullName: adminUser.fullName,
+        email: adminUser.email,
+      });
+      alert('Admin Profile updated successfully!');
+    } catch (err) {
+      console.error(err);
+      alert('Error updating profile');
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setIsChangingPassword(true);
+      const decoded: any = jwtDecode(localStorage.getItem('jwt_token') || '');
+      await axiosClient.put(`/users/${decoded.userId}/password`, {
+        newPassword
+      });
+      alert('Password changed successfully!');
+      setShowPasswordModal(false);
+      setNewPassword('');
+    } catch (err) {
+      console.error(err);
+      alert('Error changing password');
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
   // State for Notification Toggles
   const [latencyAlerts, setLatencyAlerts] = useState(true);
   const [disputeEmails, setDisputeEmails] = useState(true);
@@ -75,8 +167,46 @@ const Settings = () => {
   const [twoFactor, setTwoFactor] = useState(true);
   const [ipWhitelist, setIpWhitelist] = useState(false);
 
+  if (!adminUser) {
+    return <div className="p-8 text-center text-gray-500 font-medium tracking-wide">Loading settings...</div>;
+  }
+
   return (
+    <>
     <div className="max-w-4xl mx-auto pb-12">
+      
+      {/* SECTION 0: Admin Profile Information */}
+      <SectionCard 
+        icon={<UserIcon className="w-6 h-6" />}
+        title="Admin Profile"
+        subtitle="Manage your personal administrator account details"
+      >
+        <InputRow label="Username / Phone" value={adminUser.phoneNumber || ''} onChange={(v) => handleProfileChange('phoneNumber', v)} />
+        <InputRow label="Full Name" value={adminUser.fullName || ''} onChange={(v) => handleProfileChange('fullName', v)} />
+        <InputRow label="Email Address" value={adminUser.email || ''} onChange={(v) => handleProfileChange('email', v)} />
+        
+        {/* Password Row with Change Button */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between py-4 border-b border-gray-50 last:border-0 gap-4">
+          <label className="text-sm font-medium text-gray-600 w-full md:w-1/3">Password</label>
+          <div className="w-full md:w-2/3 max-w-md flex items-center gap-3">
+             <input type="password" value="••••••••••••••••" readOnly className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none text-gray-800 bg-gray-50 text-gray-400 cursor-not-allowed" />
+             <button onClick={() => setShowPasswordModal(true)} className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-sm font-bold text-gray-700 rounded-lg transition-colors whitespace-nowrap">Change</button>
+          </div>
+        </div>
+
+        <InputRow label="Role / Permissions" value={adminUser.role || "ADMIN"} readOnly={true} />
+        
+        <div className="mt-6 flex justify-end">
+          <button 
+            onClick={handleSaveProfile}
+            disabled={isSavingProfile}
+            className="flex items-center gap-2 bg-[#2E7D32] text-white px-6 py-2.5 rounded-lg font-bold hover:bg-green-800 transition-colors disabled:opacity-50"
+          >
+            {isSavingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+            Save Details
+          </button>
+        </div>
+      </SectionCard>
       
       {/* SECTION 1: SMS Gateway Configuration */}
       <SectionCard 
@@ -130,6 +260,47 @@ const Settings = () => {
       </div>
 
     </div>
+      
+      {/* PASSWORD CHANGE MODAL */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-[#3E2723]/30 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 w-full max-w-md overflow-hidden animate-in zoom-in-95">
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+              <h3 className="font-bold text-[#3E2723] text-lg">Change Password</h3>
+              <button onClick={() => setShowPasswordModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <form onSubmit={handlePasswordChange} className="p-6 space-y-4">
+              <InputRow 
+                label="New Password" 
+                type="password" 
+                value={newPassword} 
+                onChange={setNewPassword} 
+              />
+              <div className="pt-4 flex gap-3">
+                <button 
+                  type="button" 
+                  onClick={() => setShowPasswordModal(false)}
+                  className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-600 rounded-lg font-bold hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={isChangingPassword || !newPassword}
+                  className="flex-1 px-4 py-2.5 bg-[#2E7D32] text-white rounded-lg font-bold hover:bg-green-800 transition-colors flex justify-center items-center gap-2 disabled:opacity-50"
+                >
+                  {isChangingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                  Update Password
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
