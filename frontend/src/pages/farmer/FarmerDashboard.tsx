@@ -38,6 +38,32 @@ const FarmerDashboard = () => {
 
   useEffect(() => {
     fetchData();
+
+    // CONNECT TO NATIVE WEBSOCKET FOR REAL-TIME OFFERS
+    const ws = new WebSocket('ws://localhost:8080/api/ws/notifications');
+    
+    ws.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        if (payload.type === 'BID_PLACED') {
+          // Check if it's for this farmer
+          const token = localStorage.getItem('jwt_token');
+          if (token) {
+            const decoded: any = jwtDecode(token);
+            if (decoded.userId === payload.farmerId) {
+              alert(`🔔 Live Offer Alert! ${payload.buyerName} just bid ${payload.amount} RWF for your produce!`);
+              fetchData(); // Instantly refresh
+            }
+          }
+        }
+      } catch (err) {
+        console.error("WS Parse error", err);
+      }
+    };
+
+    return () => {
+      ws.close();
+    };
   }, []);
 
   // --- CRUD OPERATIONS ---

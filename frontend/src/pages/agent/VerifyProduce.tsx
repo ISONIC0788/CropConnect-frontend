@@ -11,7 +11,8 @@ const VerifyProduce = () => {
   const [listing, setListing] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [verifying, setVerifying] = useState(false);
-  const [photoCaptured, setPhotoCaptured] = useState(false);
+  const [photoBlob, setPhotoBlob] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   
@@ -50,19 +51,53 @@ const VerifyProduce = () => {
     setChecks(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const handlePhotoCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPhotoBlob(file);
+      setPhotoPreview(URL.createObjectURL(file));
+    }
+  };
+
   const handleValidate = async () => {
     if (!listingId) return;
+    if (!photoBlob) {
+      setError("Please capture a photo before verifying.");
+      return;
+    }
+
     setVerifying(true);
     
-    try {
-      await agentService.verifyListing(listingId);
-      setSuccess(true);
-      setTimeout(() => {
-        navigate('/agent'); // Go back to dashboard to see it removed from the queue!
-      }, 2000);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to verify produce. Please try again.");
+    // Process Geofencing and Verification
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const formData = new FormData();
+            formData.append('agentLon', position.coords.longitude.toString());
+            formData.append('agentLat', position.coords.latitude.toString());
+            formData.append('photo', photoBlob);
+
+            await agentService.verifyListing(listingId, formData);
+            setSuccess(true);
+            setTimeout(() => {
+              navigate('/agent'); 
+            }, 2000);
+          } catch (err: any) {
+            console.error(err);
+            const errorMsg = err.response?.data?.error || "Failed to verify produce. Please try again.";
+            setError(errorMsg);
+            setVerifying(false);
+          }
+        },
+        (error) => {
+          setError("Failed to retrieve GPS location. Ensure location services are enabled.");
+          setVerifying(false);
+        },
+        { enableHighAccuracy: true }
+      );
+    } else {
+      setError("Geolocation is not supported by your browser.");
       setVerifying(false);
     }
   };
@@ -135,30 +170,37 @@ const VerifyProduce = () => {
         {/* PHOTO CAPTURE AREA */}
         <div>
           <h3 className="text-sm font-bold text-[#3E2723] mb-3 font-serif">1. Photographic Evidence</h3>
-          {photoCaptured ? (
+          {photoPreview ? (
             <div className="relative w-full h-40 rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
               <img 
-                src="https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=600&q=80" 
+                src={photoPreview} 
                 alt="Captured Produce" 
                 className="w-full h-full object-cover"
               />
               <button 
-                onClick={() => setPhotoCaptured(false)}
+                onClick={() => {
+                  setPhotoBlob(null);
+                  setPhotoPreview(null);
+                }}
                 className="absolute top-3 right-3 px-3 py-1.5 bg-black/50 backdrop-blur text-white text-xs font-bold rounded-lg"
               >
                 Retake
               </button>
             </div>
           ) : (
-            <button 
-              onClick={() => setPhotoCaptured(true)}
-              className="w-full h-40 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-3 hover:bg-gray-100 transition-colors"
-            >
+            <label className="w-full h-40 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-3 hover:bg-gray-100 transition-colors cursor-pointer">
+              <input 
+                type="file" 
+                accept="image/*" 
+                capture="environment"
+                className="hidden" 
+                onChange={handlePhotoCapture} 
+              />
               <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-[#2E7D32]">
                 <Camera className="w-6 h-6" />
               </div>
               <span className="font-bold text-gray-600 text-sm">Tap to Take Photo</span>
-            </button>
+            </label>
           )}
         </div>
 
@@ -182,7 +224,7 @@ const VerifyProduce = () => {
         </button>
         <button 
           onClick={handleValidate}
-          disabled={!photoCaptured || !allChecked || verifying}
+          disabled={!photoBlob || !allChecked || verifying}
           className="flex-[2] py-4 bg-[#2E7D32] text-white rounded-xl font-bold text-sm shadow-md hover:bg-green-800 transition-colors disabled:opacity-50 disabled:bg-gray-400 flex items-center justify-center gap-2"
         >
           {verifying ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />} 

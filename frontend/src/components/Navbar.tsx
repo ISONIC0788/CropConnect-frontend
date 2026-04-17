@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -69,9 +70,14 @@ const Navbar = () => {
                 {link.name}
               </a>
             ))}
-            <button className="bg-accent hover:bg-yellow-500 text-brown px-6 py-2.5 rounded-lg font-semibold transition-colors cursor-pointer shadow-lg">
-              Get Started
-            </button>
+            <Link to="/login" className="text-white hover:text-accent transition-colors font-medium cursor-pointer shadow-sm">
+              Log In
+            </Link>
+            <Link to="/signup">
+              <button className="bg-accent hover:bg-yellow-500 text-[#3E2723] px-6 py-2.5 rounded-lg font-semibold transition-colors cursor-pointer shadow-lg">
+                Get Started
+              </button>
+            </Link>
           </div>
 
           <div className="md:hidden flex items-center">
@@ -98,9 +104,14 @@ const Navbar = () => {
                 {link.name}
               </a>
             ))}
-            <button className="w-full bg-accent hover:bg-yellow-500 text-brown px-5 py-3 rounded-lg font-semibold transition-colors mt-4 shadow-sm cursor-pointer">
-              Get Started
-            </button>
+            <Link to="/login" className="block text-white hover:text-accent transition-colors text-base font-medium px-2 py-2" onClick={() => setIsOpen(false)}>
+              Log In
+            </Link>
+            <Link to="/signup" onClick={() => setIsOpen(false)}>
+              <button className="w-full bg-accent hover:bg-yellow-500 text-[#3E2723] px-5 py-3 rounded-lg font-semibold transition-colors mt-2 shadow-sm cursor-pointer">
+                Get Started
+              </button>
+            </Link>
           </div>
         </div>
       )}

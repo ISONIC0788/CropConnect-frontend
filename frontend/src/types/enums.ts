@@ -6,6 +6,7 @@ export enum Role {
 }
 
 export enum EscrowStatus {
+    PENDING = 'PENDING',
     HELD = 'HELD',
     RELEASED = 'RELEASED',
     REFUNDED = 'REFUNDED'
@@ -13,6 +14,7 @@ export enum EscrowStatus {
 
 export enum LogisticsStatus {
     PENDING = 'PENDING',
+    PENDING_PICKUP = 'PENDING_PICKUP',
     IN_TRANSIT = 'IN_TRANSIT',
     QUALITY_VERIFIED = 'QUALITY_VERIFIED',
     DELIVERED = 'DELIVERED',

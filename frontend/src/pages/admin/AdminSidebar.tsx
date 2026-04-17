@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Scale, Activity, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, Scale, Activity, Settings, LogOut, ShieldCheck } from 'lucide-react';
 
 // Define the properties we will pass from the layout
 interface AdminSidebarProps {
@@ -12,11 +12,12 @@ const AdminSidebar = ({ isCollapsed, isMobileOpen, closeMobile }: AdminSidebarPr
   const location = useLocation();
 
   const navLinks = [
-    { name: 'Overview', path: '/admin', icon: <LayoutDashboard className="w-5 h-5 flex-shrink-0" /> },
-    { name: 'Users', path: '/admin/users', icon: <Users className="w-5 h-5 flex-shrink-0" /> },
-    { name: 'Disputes', path: '/admin/disputes', icon: <Scale className="w-5 h-5 flex-shrink-0" /> },
-    { name: 'Health', path: '/admin/health', icon: <Activity className="w-5 h-5 flex-shrink-0" /> },
-    { name: 'Settings', path: '/admin/settings', icon: <Settings className="w-5 h-5 flex-shrink-0" /> },
+    { name: 'Overview',   path: '/admin',            icon: <LayoutDashboard className="w-5 h-5 flex-shrink-0" /> },
+    { name: 'Users',      path: '/admin/users',       icon: <Users className="w-5 h-5 flex-shrink-0" /> },
+    { name: 'Disputes',   path: '/admin/disputes',    icon: <Scale className="w-5 h-5 flex-shrink-0" /> },
+    { name: 'Audit Logs', path: '/admin/audit-logs',  icon: <ShieldCheck className="w-5 h-5 flex-shrink-0" /> },
+    { name: 'Health',     path: '/admin/health',      icon: <Activity className="w-5 h-5 flex-shrink-0" /> },
+    { name: 'Settings',   path: '/admin/settings',    icon: <Settings className="w-5 h-5 flex-shrink-0" /> },
   ];
 
   return (

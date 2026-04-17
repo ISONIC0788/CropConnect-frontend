@@ -70,7 +70,7 @@ const SourcingMap = () => {
         
         // Map backend data to the frontend structure
         const mappedData: FrontendCropListing[] = backendData
-          .filter(item => item.isVerified && item.status === 'ACTIVE') // Buyers only see verified stuff!
+          .filter(item => item.isVerified && item.status === 'ACTIVE') // Only ACTIVE + verified listings
           .map(item => ({
             id: item.listingId,
             crop: item.cropType,
@@ -133,9 +133,12 @@ const SourcingMap = () => {
       alert("Bids placed successfully! Redirecting to your Escrow Wallet.");
       navigate('/buyer/wallet');
 
-    } catch (error) {
+    } catch (error: any) {
+      // Surface the real error message from the Spring Boot backend
+      const backendMessage = error?.response?.data?.error;
+      const displayMessage = backendMessage || "Error placing bids. Make sure you are logged in as a Buyer.";
       console.error("Failed to place bulk bids:", error);
-      alert("Error placing bids. Make sure you are logged in as a Buyer.");
+      alert(`❌ Bid Failed: ${displayMessage}`);
     } finally {
       setIsBidding(false);
     }

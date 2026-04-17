@@ -20,6 +20,8 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     pageTitle = 'User Management';
   } else if (location.pathname === '/admin/disputes') {
     pageTitle = 'Dispute Arbitration';
+  } else if (location.pathname === '/admin/audit-logs') {
+    pageTitle = 'Audit Logs';
   } else if (location.pathname === '/admin/health') {
     pageTitle = 'System Health';
   } else if (location.pathname === '/admin/settings') {

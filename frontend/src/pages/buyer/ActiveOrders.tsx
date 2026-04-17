@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Shield, CheckCircle2, Truck, Package, ArrowRight, Loader2 } from 'lucide-react';
+import { Clock, Shield, CheckCircle2, Truck, Package, PackageOpen, ArrowRight, Loader2 } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
 import axiosClient from '../../api/axiosClient';
 
@@ -20,6 +20,7 @@ const getStatusDisplay = (status: string) => {
     case 'PENDING': return { label: 'Pending', badge: 'bg-gray-100 text-gray-500' };
     case 'LOCKED': case 'ACCEPTED': return { label: 'Locked', badge: 'bg-[#FFF9E6] text-[#FBC02D]' };
     case 'QUALITY_CHECK': return { label: 'Quality Check', badge: 'bg-blue-50 text-[#3498DB]' };
+    case 'PENDING_PICKUP': return { label: 'Pending Pickup', badge: 'bg-yellow-50 text-yellow-600' };
     case 'IN_TRANSIT': return { label: 'In Transit', badge: 'bg-green-50 text-[#2E7D32]' };
     case 'DELIVERED': case 'COMPLETED': return { label: 'Delivered', badge: 'bg-green-100 text-[#166534]' };
     default: return { label: status || 'Unknown', badge: 'bg-gray-100 text-gray-500' };
@@ -51,8 +52,10 @@ const ActiveOrders = () => {
             const statusInfo = getStatusDisplay(order.status);
             return {
               id: order.orderId ? `ORD-${order.orderId.substring(0, 4).toUpperCase()}` : 'ORD-????',
+              originalId: order.orderId,
               crop: order.listing?.cropType || 'Unknown Crop',
               status: statusInfo.label,
+              rawLogisticsStatus: order.logisticsStatus,
               stageIndex: getStageIndex(order.status),
               farmer: order.listing?.farmer?.fullName || 'Registered Farmer',
               district: 'Rwanda', // Using default unless postGIS exact region mapping is available
@@ -76,6 +79,46 @@ const ActiveOrders = () => {
 
     fetchBuyerOrders();
   }, []);
+
+  const handleSimulateDelivery = async (orderId: string) => {
+    if (window.confirm("Simulate delivery of goods (Driver dropping off)?")) {
+      try {
+        await axiosClient.put(`/orders/${orderId}/simulate-delivery`);
+        
+        // Refresh orders intelligently
+        const token = localStorage.getItem('jwt_token');
+        if (!token) return;
+        setLoading(true);
+        const buyerId = (jwtDecode(token) as any).userId;
+        const response = await axiosClient.get('/orders');
+        const mappedOrders = response.data
+          .filter((order: any) => order.buyer?.userId === buyerId)
+          .map((order: any) => {
+            const statusInfo = getStatusDisplay(order.logisticsStatus);
+            return {
+              id: order.orderId ? `ORD-${order.orderId.substring(0, 4).toUpperCase()}` : 'ORD-????',
+              originalId: order.orderId,
+              crop: order.listing?.cropType || 'Unknown Crop',
+              status: statusInfo.label,
+              rawLogisticsStatus: order.logisticsStatus,
+              stageIndex: getStageIndex(order.logisticsStatus),
+              farmer: order.listing?.farmer?.fullName || 'Registered Farmer',
+              district: 'Rwanda',
+              amount: `${(order.totalAmount || order.bidAmount || 0).toLocaleString()} RWF`,
+              weight: `${(order.listing?.quantityKg || 0).toLocaleString()} kg`,
+              date: order.createdAt ? new Date(order.createdAt).toISOString().split('T')[0] : 'Just now',
+              statusBadge: statusInfo.badge
+            };
+          });
+        mappedOrders.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        setOrders(mappedOrders);
+      } catch (error: any) {
+        alert("Simulation failed: " + (error.response?.data || error.message));
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
 
   // Compute dynamic pipeline counts from real data
   const pipelineStages = [
@@ -175,6 +218,24 @@ const ActiveOrders = () => {
             <div className="flex justify-between items-center text-xs font-bold text-gray-400 mt-2">
               <p>{order.weight}</p>
               <p>Ordered {order.date}</p>
+            </div>
+
+            {/* SIMULATOR BUTTON */}
+            <div className="mt-4 pt-4 border-t border-gray-100 flex justify-end">
+              {(order.rawLogisticsStatus === 'PENDING_PICKUP' || order.rawLogisticsStatus === 'IN_TRANSIT') ? (
+                <button 
+                  onClick={() => handleSimulateDelivery(order.originalId)}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#2E7D32] hover:bg-[#1b5e20] text-white rounded-lg text-sm font-bold transition-colors"
+                >
+                  <Truck className="w-4 h-4" />
+                  Simulate Delivery Drop-off
+                </button>
+              ) : order.rawLogisticsStatus === 'DELIVERED' ? (
+                <div className="flex items-center gap-2 px-4 py-2 bg-green-50 text-[#166534] rounded-lg text-sm font-bold">
+                  <PackageOpen className="w-4 h-4" />
+                  Completed
+                </div>
+              ) : null}
             </div>
 
           </div>
