@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Star, Search, Trash2, ShoppingCart, Loader2, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';

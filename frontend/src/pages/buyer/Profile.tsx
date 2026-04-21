@@ -191,7 +191,7 @@ const Profile = () => {
               <div>
                 <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Primary Crops of Interest</p>
                 <div className="flex flex-wrap gap-2">
-                  {preferences.primaryCrops.map(crop => (
+                  {preferences.primaryCrops.map((crop: string) => (
                     <span key={crop} className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-[#166534] border border-green-200 rounded-lg text-xs font-bold">
                       <Leaf className="w-3 h-3" /> {crop}
                     </span>

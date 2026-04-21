@@ -3,7 +3,7 @@ import { ShieldCheck, Search, Filter, RefreshCw, Loader2, CheckCircle2, AlertTri
 import axiosClient from '../../api/axiosClient';
 
 // ── Colour/icon mapping per action type ──────────────────────────────────────
-const ACTION_META: Record<string, { color: string; bg: string; border: string; icon: JSX.Element }> = {
+const ACTION_META: Record<string, { color: string; bg: string; border: string; icon: any }> = {
   BID_PLACED:        { color: 'text-blue-700',   bg: 'bg-blue-50',   border: 'border-blue-200',   icon: <Gavel className="w-4 h-4" /> },
   BID_ACCEPTED:      { color: 'text-green-700',  bg: 'bg-green-50',  border: 'border-green-200',  icon: <CheckCircle2 className="w-4 h-4" /> },
   LISTING_CREATED:   { color: 'text-purple-700', bg: 'bg-purple-50', border: 'border-purple-200', icon: <Package className="w-4 h-4" /> },
@@ -79,7 +79,7 @@ const AuditLogPage = () => {
 
   const bidCount      = logs.filter(l => l.actionType === 'BID_PLACED').length;
   const escrowCount   = logs.filter(l => l.actionType?.includes('ESCROW')).length;
-  const verifyCount   = logs.filter(l => l.actionType === 'QUALITY_VERIFIED').length;
+
 
   if (loading) {
     return (

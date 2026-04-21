@@ -11,13 +11,13 @@ const FarmerLayout = ({ children }: { children: React.ReactNode }) => {
 
   // Read farmer name from JWT token
   let farmerName = 'Farmer';
-  let farmerPhone = '';
+
   try {
     const token = localStorage.getItem('jwt_token');
     if (token) {
       const decoded: any = jwtDecode(token);
       farmerName = decoded.fullName || decoded.sub || 'Farmer';
-      farmerPhone = decoded.phoneNumber || '';
+
     }
   } catch (_) {}
 

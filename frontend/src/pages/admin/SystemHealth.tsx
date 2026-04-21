@@ -1,6 +1,5 @@
 import { 
-  Server, MessageSquare, Wifi, Database, Cpu, Activity, 
-  BarChart2 
+  Server, MessageSquare, Wifi, Database, Cpu
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,

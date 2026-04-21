@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Filter, MapPin, ChevronDown, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Filter, MapPin, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import InventoryCard from '../../components/buyer/InventoryCard';
