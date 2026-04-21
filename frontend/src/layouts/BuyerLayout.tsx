@@ -1,5 +1,6 @@
 // src/layouts/BuyerLayout.tsx
-import { useState, ReactNode } from 'react';
+import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Bell, Search, Menu } from 'lucide-react';
 import BuyerSidebar from '../components/buyer/BuyerSidebar';

@@ -90,7 +90,7 @@ const VerifyProduce = () => {
             setVerifying(false);
           }
         },
-        (error) => {
+        () => {
           setError("Failed to retrieve GPS location. Ensure location services are enabled.");
           setVerifying(false);
         },

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { MapPin, ClipboardCheck, ShieldCheck, Users, ChevronRight, PackageCheck } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { MapPin, ClipboardCheck, ShieldCheck, PackageCheck } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { agentService } from '../../api/agentService';

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Building2, User as UserIcon, Check, Shield } from 'lucide-react';
+import { Building2, User as UserIcon, Check, Shield, Eye, EyeOff } from 'lucide-react';
 import { authService } from '../../api/authService';
 
 const Signup = () => {
@@ -11,6 +11,7 @@ const Signup = () => {
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   
   // Fields present in UI but missing in DB currently (we just hold them in state)
   const [email, setEmail] = useState('');
@@ -177,15 +178,23 @@ const Signup = () => {
 
         <div className="relative">
           <input 
-            type="password" 
+            type={showPassword ? "text" : "password"} 
             id="signup-password" 
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required 
-            className="peer w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl text-sm text-[#3E2723] placeholder-transparent focus:border-[#2E7D32] focus:ring-0 focus:outline-none transition-colors bg-white" 
+            className="peer w-full px-4 pt-6 pb-2 pr-12 border-2 border-gray-200 rounded-xl text-sm text-[#3E2723] placeholder-transparent focus:border-[#2E7D32] focus:ring-0 focus:outline-none transition-colors bg-white" 
             placeholder="Password" 
           />
           <label htmlFor="signup-password" className="absolute left-4 top-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-4 peer-placeholder-shown:normal-case peer-placeholder-shown:font-medium peer-focus:top-2 peer-focus:text-[11px] peer-focus:uppercase peer-focus:font-bold peer-focus:text-[#2E7D32]">Create Password</label>
+          <button 
+            type="button" 
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-4 top-[25px] -translate-y-1/2 text-gray-400 hover:text-[#2E7D32] transition-colors"
+            tabIndex={-1}
+          >
+            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+          </button>
           
           {/* PASSWORD STRENGTH INDICATOR */}
           <div className="flex gap-1 mt-2 px-1">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Clock, CheckCircle2, XCircle, Trash2, Edit2, Loader2, X, Plus } from 'lucide-react';
+import { Search, Filter, Clock, CheckCircle2, XCircle, Trash2, Edit2, Loader2, X, Plus, Eye, EyeOff } from 'lucide-react';
 import axiosClient from '../../api/axiosClient';
 
 // --- HELPER COMPONENTS ---
@@ -56,6 +56,7 @@ const UserManagement = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [addForm, setAddForm] = useState({ fullName: '', phoneNumber: '', password: '', role: 'FARMER' });
+  const [showAddPassword, setShowAddPassword] = useState(false);
 
   // Filters State
   const [searchQuery, setSearchQuery] = useState('');
@@ -409,14 +410,23 @@ const UserManagement = () => {
 
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Temporary Password</label>
-                <input 
-                  type="password" 
-                  required
-                  value={addForm.password}
-                  onChange={(e) => setAddForm({...addForm, password: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]"
-                  placeholder="Enter initial password"
-                />
+                <div className="relative">
+                  <input 
+                    type={showAddPassword ? "text" : "password"} 
+                    required
+                    value={addForm.password}
+                    onChange={(e) => setAddForm({...addForm, password: e.target.value})}
+                    className="w-full px-4 py-2 pr-10 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]"
+                    placeholder="Enter initial password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAddPassword(!showAddPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showAddPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <div>

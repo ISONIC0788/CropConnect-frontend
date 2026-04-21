@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Phone, Lock, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Phone, Lock, ArrowRight, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { authService } from '../../api/authService';
 import { jwtDecode } from 'jwt-decode';
 
@@ -14,6 +14,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,12 +128,12 @@ const Login = () => {
 
             <div className="relative">
               <input 
-                type="password" 
+                type={showPassword ? "text" : "password"} 
                 id="password" 
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="peer w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl text-sm text-[#3E2723] placeholder-transparent focus:border-[#2E7D32] focus:ring-0 focus:outline-none transition-colors bg-white" 
+                className="peer w-full px-4 pt-6 pb-2 pr-12 border-2 border-gray-200 rounded-xl text-sm text-[#3E2723] placeholder-transparent focus:border-[#2E7D32] focus:ring-0 focus:outline-none transition-colors bg-white" 
                 placeholder="Password" 
               />
               <label 
@@ -141,6 +142,14 @@ const Login = () => {
               >
                 Password
               </label>
+              <button 
+                type="button" 
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#2E7D32] transition-colors"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
           </>
         )}

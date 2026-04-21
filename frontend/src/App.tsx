@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Role } from './types/enums';
 
 // --- LANDING PAGE COMPONENTS ---
@@ -29,7 +29,7 @@ import AuditLogPage from './pages/admin/AuditLogPage'
 // --- BUYER COMPONENTS ---
 import BuyerLayout from './layouts/BuyerLayout'
 import SourcingMap from './pages/buyer/SourcingMap'
-import Watchlist from './pages/buyer/Watchlist' 
+import Watchlist from './pages/buyer/Watchlist'
 import ActiveOrders from './pages/buyer/ActiveOrders'
 import EscrowWallet from './pages/buyer/EscrowWallet'
 import Profile from './pages/buyer/Profile'
@@ -38,12 +38,12 @@ import Profile from './pages/buyer/Profile'
 import AgentLayout from './layouts/AgentLayout'
 import AgentDashboard from './pages/agent/AgentDashboard'
 import OnboardFarmer from './pages/agent/OnboardFarmer'
-import VerifyProduce from './pages/agent/VerifyProduce' 
+import VerifyProduce from './pages/agent/VerifyProduce'
 import MediateDispute from './pages/agent/MediateDispute'
 
 // --- FARMER COMPONENTS ---
-import FarmerLayout from './layouts/FarmerLayout' 
-import FarmerDashboard from './pages/farmer/FarmerDashboard' 
+import FarmerLayout from './layouts/FarmerLayout'
+import FarmerDashboard from './pages/farmer/FarmerDashboard'
 import SalesHistory from './pages/farmer/SalesHistory' // <-- NEW IMPORT
 import Payments from './pages/farmer/Payments'         // <-- NEW IMPORT
 
@@ -77,7 +77,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<AuthLayout><Login /></AuthLayout>} />
         <Route path="/signup" element={<AuthLayout><Signup /></AuthLayout>} />
-        
+
         {/* Admin Routes - Protected */}
         <Route path="/admin" element={<ProtectedRoute allowedRoles={[Role.ADMIN, `ROLE_${Role.ADMIN}`]}><AdminLayout><AdminDashboard1 /></AdminLayout></ProtectedRoute>} />
         <Route path="/admin/users" element={<ProtectedRoute allowedRoles={[Role.ADMIN, `ROLE_${Role.ADMIN}`]}><AdminLayout><UserManagement /></AdminLayout></ProtectedRoute>} />
@@ -88,11 +88,11 @@ function App() {
 
         {/* Buyer Routes - Protected */}
         <Route path="/buyer" element={<ProtectedRoute allowedRoles={[Role.BUYER, `ROLE_${Role.BUYER}`]}><BuyerLayout><SourcingMap /></BuyerLayout></ProtectedRoute>} />
-        <Route path="/buyer/watchlist" element={<ProtectedRoute allowedRoles={[Role.BUYER, `ROLE_${Role.BUYER}`]}><BuyerLayout><Watchlist /></BuyerLayout></ProtectedRoute>} /> 
-        <Route path="/buyer/orders" element={<ProtectedRoute allowedRoles={[Role.BUYER, `ROLE_${Role.BUYER}`]}><BuyerLayout><ActiveOrders /></BuyerLayout></ProtectedRoute>} /> 
+        <Route path="/buyer/watchlist" element={<ProtectedRoute allowedRoles={[Role.BUYER, `ROLE_${Role.BUYER}`]}><BuyerLayout><Watchlist /></BuyerLayout></ProtectedRoute>} />
+        <Route path="/buyer/orders" element={<ProtectedRoute allowedRoles={[Role.BUYER, `ROLE_${Role.BUYER}`]}><BuyerLayout><ActiveOrders /></BuyerLayout></ProtectedRoute>} />
         <Route path="/buyer/wallet" element={<ProtectedRoute allowedRoles={[Role.BUYER, `ROLE_${Role.BUYER}`]}><BuyerLayout><EscrowWallet /></BuyerLayout></ProtectedRoute>} />
         <Route path="/buyer/profile" element={<ProtectedRoute allowedRoles={[Role.BUYER, `ROLE_${Role.BUYER}`]}><BuyerLayout><Profile /></BuyerLayout></ProtectedRoute>} />
-        
+
         {/* Agent Routes - Protected */}
         <Route path="/agent" element={<ProtectedRoute allowedRoles={[Role.AGENT, `ROLE_${Role.AGENT}`]}><AgentLayout><AgentDashboard /></AgentLayout></ProtectedRoute>} />
         <Route path="/agent/verify" element={<ProtectedRoute allowedRoles={[Role.AGENT, `ROLE_${Role.AGENT}`]}><AgentLayout><VerifyProduce /></AgentLayout></ProtectedRoute>} />

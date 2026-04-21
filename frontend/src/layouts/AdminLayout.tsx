@@ -1,6 +1,7 @@
-import { useState, ReactNode } from 'react';
+import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { LayoutDashboard, Bell, Search, Menu } from 'lucide-react';
-import { useLocation } from 'react-router-dom'; // <-- Added this import
+import { useLocation, useNavigate } from 'react-router-dom';
 import AdminSidebar from '../pages/admin/AdminSidebar';
 
 interface AdminLayoutProps {
@@ -13,6 +14,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [isMobileOpen, setIsMobileOpen] = useState(false); // For Mobile Devices
 
   const location = useLocation(); // <-- Get the current URL
+  const navigate = useNavigate();
 
   // <-- Determine the title dynamically based on the current URL
   let pageTitle = 'Dashboard Overview';
@@ -87,7 +89,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             </button>
 
             {/* Admin Profile */}
-            <div className="flex items-center gap-3 pl-3 md:pl-6 border-l border-gray-200 cursor-pointer group flex-shrink-0">
+            <div 
+              className="flex items-center gap-3 pl-3 md:pl-6 border-l border-gray-200 cursor-pointer group flex-shrink-0"
+              onClick={() => navigate('/admin/settings')}
+              title="Open Profile Settings"
+            >
               <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm group-hover:bg-green-800 transition-colors">
                 SA
               </div>
