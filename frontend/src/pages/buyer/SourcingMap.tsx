@@ -5,6 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 import InventoryCard from '../../components/buyer/InventoryCard';
 import { buyerService } from '../../api/buyerService';
 import axiosClient from '../../api/axiosClient';
+import { toast } from 'sonner';
 
 // The shape that InventoryCard expects
 export interface FrontendCropListing {
@@ -158,7 +159,7 @@ const SourcingMap = () => {
       await Promise.all(bidPromises);
 
       // 4. Success! Redirect the buyer to their Escrow Wallet to see the locked funds
-      alert("Bids placed successfully! Redirecting to your Escrow Wallet.");
+      toast.success('Bids placed! Redirecting to your Escrow Wallet...');
       navigate('/buyer/wallet');
 
     } catch (error: any) {
@@ -166,7 +167,7 @@ const SourcingMap = () => {
       const backendMessage = error?.response?.data?.error;
       const displayMessage = backendMessage || "Error placing bids. Make sure you are logged in as a Buyer.";
       console.error("Failed to place bulk bids:", error);
-      alert(`❌ Bid Failed: ${displayMessage}`);
+      toast.error(`Bid Failed: ${displayMessage}`);
     } finally {
       setIsBidding(false);
     }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Wallet, Clock, ShieldAlert, ArrowUpRight, ArrowDownRight, Loader2, Smartphone, CheckCircle } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
 import axiosClient from '../../api/axiosClient';
+import { toast } from 'sonner';
 
 const EscrowWallet = () => {
   const [orders, setOrders] = useState<any[]>([]);
@@ -56,7 +57,7 @@ const EscrowWallet = () => {
         await axiosClient.put(`/orders/${orderId}/simulate-payment`);
         await fetchWalletData();
       } catch (error: any) {
-        alert("Simulation failed: " + (error.response?.data || error.message));
+        toast.error(`Simulation failed: ${error.response?.data || error.message}`);
         setLoading(false);
       }
     }

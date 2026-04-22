@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Clock, Shield, CheckCircle2, Truck, Package, PackageOpen, ArrowRight, Loader2 } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
 import axiosClient from '../../api/axiosClient';
+import { toast } from 'sonner';
 
 // --- HELPER FUNCTIONS FOR MAPPING BACKEND DATA ---
 const getStageIndex = (escrowStatus: string, logisticsStatus: string) => {
@@ -110,7 +111,7 @@ const ActiveOrders = () => {
         mappedOrders.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
         setOrders(mappedOrders);
       } catch (error: any) {
-        alert("Simulation failed: " + (error.response?.data || error.message));
+        toast.error(`Simulation failed: ${error.response?.data || error.message}`);
       } finally {
         setLoading(false);
       }

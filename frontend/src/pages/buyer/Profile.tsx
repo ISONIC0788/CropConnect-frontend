@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Building, Mail, Phone, MapPin, ShieldCheck, Edit3, Settings, Leaf, Loader2, X, Eye, EyeOff, Lock } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
 import axiosClient from '../../api/axiosClient';
+import { toast } from 'sonner';
 
 const Profile = () => {
   const [user, setUser] = useState<any>(null);
@@ -44,14 +45,14 @@ const Profile = () => {
       
       await axiosClient.put(`/users/${decoded.userId}`, payload);
       
-      const response = await axiosClient.get(`/users/${decoded.userId}`);
-      setUser(response.data);
-      
       setIsEditModalOpen(false);
-      alert('Profile updated successfully!');
+      toast.success('Profile updated successfully!');
+      const decoded2: any = jwtDecode(localStorage.getItem('jwt_token') || '');
+      const res = await axiosClient.get(`/users/${decoded2.userId}`);
+      setUser(res.data);
     } catch (err) {
       console.error(err);
-      alert('Failed to update profile');
+      toast.error('Failed to update profile');
     } finally {
       setIsSaving(false);
     }
@@ -63,12 +64,12 @@ const Profile = () => {
       setIsSaving(true);
       const decoded: any = jwtDecode(localStorage.getItem('jwt_token') || '');
       await axiosClient.put(`/users/${decoded.userId}/password`, { newPassword });
-      alert('Password changed successfully!');
+      toast.success('Password changed successfully!');
       setIsPasswordModalOpen(false);
       setNewPassword('');
     } catch (err) {
       console.error(err);
-      alert('Failed to change password');
+      toast.error('Failed to change password');
     } finally {
       setIsSaving(false);
     }

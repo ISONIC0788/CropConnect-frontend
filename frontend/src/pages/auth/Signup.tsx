@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { Building2, User as UserIcon, Check, Shield, Eye, EyeOff } from 'lucide-react';
 import { authService } from '../../api/authService';
 
@@ -52,7 +53,7 @@ const Signup = () => {
       await authService.register(userData);
 
       // 3. If successful, redirect them to login so they can authenticate
-      alert('Account created successfully! Please log in.');
+      toast.success('Account created! Please log in.');
       navigate('/login');
 
     } catch (err: any) {
