@@ -3,6 +3,19 @@ import { Sprout, CheckCircle2, Clock, Banknote, Loader2, Package, Plus, X, Lock 
 import { jwtDecode } from 'jwt-decode';
 import axiosClient from '../../api/axiosClient';
 
+// Crop-type fallback images (used when no Cloudinary photo is available)
+const getCropFallback = (cropType: string = '') => {
+  const c = cropType.toLowerCase();
+  if (c.includes('maize') || c.includes('corn')) return 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=400&q=80';
+  if (c.includes('coffee')) return 'https://images.unsplash.com/photo-1524414139215-35c99f80112c?auto=format&fit=crop&w=400&q=80';
+  if (c.includes('bean')) return 'https://images.unsplash.com/photo-1551326844-4df70f78d0e9?auto=format&fit=crop&w=400&q=80';
+  if (c.includes('potato')) return 'https://images.unsplash.com/photo-1508313880080-c4bef0730395?auto=format&fit=crop&w=400&q=80';
+  if (c.includes('rice')) return 'https://images.unsplash.com/photo-1536304929831-ee1ca9d44906?auto=format&fit=crop&w=400&q=80';
+  if (c.includes('cassava')) return 'https://images.unsplash.com/photo-1601987077677-5346c0982e0b?auto=format&fit=crop&w=400&q=80';
+  if (c.includes('tomato')) return 'https://images.unsplash.com/photo-1546093931-0b5abe7ef66a?auto=format&fit=crop&w=400&q=80';
+  return 'https://images.unsplash.com/photo-1599839619722-39751411ea63?auto=format&fit=crop&w=400&q=80';
+};
+
 const FarmerDashboard = () => {
   const [listings, setListings] = useState<any[]>([]);
   const [bids, setBids] = useState<any[]>([]);
@@ -162,44 +175,68 @@ const FarmerDashboard = () => {
             </div>
           ) : (
             listings.map(item => (
-              <div key={item.listingId} className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+              <div key={item.listingId} className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden relative">
                 
+                {/* Cloudinary crop image */}
+                {item.verificationPhotoUrl ? (
+                  <div className="relative h-36">
+                    <img
+                      src={item.verificationPhotoUrl}
+                      alt={item.cropType}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = getCropFallback(item.cropType);
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                    <span className="absolute bottom-2 left-3 text-white text-xs font-bold">{item.cropType}</span>
+                  </div>
+                ) : (
+                  <div className="h-28 bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center overflow-hidden">
+                    <img
+                      src={getCropFallback(item.cropType)}
+                      alt={item.cropType}
+                      className="w-full h-full object-cover opacity-60"
+                    />
+                  </div>
+                )}
+
                 {/* Visual Status Bar */}
                 <div className={`absolute top-0 left-0 w-1 h-full ${
                   item.status === 'LOCKED' ? 'bg-blue-500' : 
                   item.isVerified ? 'bg-[#2E7D32]' : 'bg-yellow-400'
                 }`}></div>
 
-                <div className="flex justify-between items-start mb-3 pl-2">
-                  <h3 className="font-bold text-[#3E2723] text-lg">{item.quantityKg}kg {item.cropType}</h3>
-                  
-                  {/* Dynamic Status Badges tracking the Exact Workflow */}
-                  {item.status === 'LOCKED' ? (
-                    <span className="flex items-center gap-1 text-[10px] font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200">
-                      <Lock className="w-3 h-3" /> SECURED IN ESCROW
-                    </span>
-                  ) : item.isVerified ? (
-                    <span className="flex items-center gap-1 text-[10px] font-bold text-green-700 bg-green-50 px-2.5 py-1 rounded-md border border-green-200">
-                      <CheckCircle2 className="w-3 h-3" /> VERIFIED (LIVE)
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1 text-[10px] font-bold text-yellow-700 bg-yellow-50 px-2.5 py-1 rounded-md border border-yellow-200">
-                      <Clock className="w-3 h-3" /> PENDING AGENT
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex justify-between items-center text-sm pt-3 border-t border-gray-100 mt-2 pl-2">
-                  <div>
-                    <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-0.5">Asking Price</p>
-                    <span className="text-[#2E7D32] font-bold">{item.pricePerKg.toLocaleString()} RWF/kg</span>
+                <div className="p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="font-bold text-[#3E2723] text-lg">{item.quantityKg}kg {item.cropType}</h3>
+                    
+                    {item.status === 'LOCKED' ? (
+                      <span className="flex items-center gap-1 text-[10px] font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200">
+                        <Lock className="w-3 h-3" /> SECURED IN ESCROW
+                      </span>
+                    ) : item.isVerified ? (
+                      <span className="flex items-center gap-1 text-[10px] font-bold text-green-700 bg-green-50 px-2.5 py-1 rounded-md border border-green-200">
+                        <CheckCircle2 className="w-3 h-3" /> VERIFIED (LIVE)
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-[10px] font-bold text-yellow-700 bg-yellow-50 px-2.5 py-1 rounded-md border border-yellow-200">
+                        <Clock className="w-3 h-3" /> PENDING AGENT
+                      </span>
+                    )}
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-0.5">Est. Total</p>
-                    <span className="text-[#3E2723] font-bold">{(item.pricePerKg * item.quantityKg).toLocaleString()} RWF</span>
+
+                  <div className="flex justify-between items-center text-sm pt-3 border-t border-gray-100">
+                    <div>
+                      <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-0.5">Asking Price</p>
+                      <span className="text-[#2E7D32] font-bold">{item.pricePerKg.toLocaleString()} RWF/kg</span>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-0.5">Est. Total</p>
+                      <span className="text-[#3E2723] font-bold">{(item.pricePerKg * item.quantityKg).toLocaleString()} RWF</span>
+                    </div>
                   </div>
                 </div>
-
               </div>
             ))
           )}

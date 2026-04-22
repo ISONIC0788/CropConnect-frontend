@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogOut, Menu, LayoutDashboard, History, Wallet, Bell, Search } from 'lucide-react';
+import { LogOut, Menu, LayoutDashboard, History, Wallet, Bell, Search, User } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 
@@ -25,11 +25,13 @@ const FarmerLayout = ({ children }: { children: React.ReactNode }) => {
   let pageTitle = 'Dashboard';
   if (location.pathname === '/farmer/history') pageTitle = 'Sales History';
   if (location.pathname === '/farmer/payments') pageTitle = 'Payments';
+  if (location.pathname === '/farmer/profile') pageTitle = 'My Profile';
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/farmer' },
     { icon: History, label: 'Sales History', path: '/farmer/history' },
     { icon: Wallet, label: 'Payments', path: '/farmer/payments' },
+    { icon: User, label: 'My Profile', path: '/farmer/profile' },
   ];
 
   const handleLogout = () => {

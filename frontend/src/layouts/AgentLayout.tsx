@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, ClipboardCheck, UserPlus, Scale, LogOut } from 'lucide-react';
+import { Home, ClipboardCheck, UserPlus, Scale, LogOut, User } from 'lucide-react';
 
 interface AgentLayoutProps {
   children: ReactNode;
@@ -14,6 +14,7 @@ const AgentLayout = ({ children }: AgentLayoutProps) => {
     { path: '/agent/verify', label: 'Verify', icon: ClipboardCheck },
     { path: '/agent/onboard', label: 'Onboard', icon: UserPlus },
     { path: '/agent/mediate', label: 'Mediate', icon: Scale },
+    { path: '/agent/profile', label: 'Profile', icon: User },
     { path: '/logout', label: 'Log Out', icon: LogOut },
   ];
 

@@ -29,8 +29,10 @@ const admindashboard1 = () => {
         const orders = ordersRes.data || [];
         const pending = pendingRes.data || [];
 
-        // Calculate total escrow volume from orders
-        const totalEscrow = orders.reduce((sum: number, order: any) => sum + (order.totalAmount || order.bidAmount || 0), 0);
+        // Calculate active escrow volume — HELD orders only (real in-escrow money)
+        const totalEscrow = orders
+          .filter((order: any) => order.escrowStatus === 'HELD')
+          .reduce((sum: number, order: any) => sum + (order.finalAmount || order.totalAmount || order.bidAmount || 0), 0);
 
         setStats({
           totalUsers: users.length,
@@ -46,7 +48,7 @@ const admindashboard1 = () => {
           .map((order: any, idx: number) => ({
             id: order.orderId || idx,
             icon: <ShieldCheck className="w-4 h-4 text-primary" />,
-            text: `Order ${order.orderId ? order.orderId.substring(0, 8).toUpperCase() : 'Unknown'} processed for ${Number(order.totalAmount || order.bidAmount || 0).toLocaleString()} RWF`,
+            text: `Order ${order.orderId ? order.orderId.substring(0, 8).toUpperCase() : 'Unknown'} processed for ${Number(order.finalAmount || order.totalAmount || order.bidAmount || 0).toLocaleString()} RWF`,
             time: order.createdAt ? new Date(order.createdAt).toLocaleString() : 'Just now',
             type: order.status === 'COMPLETED' ? 'success' : 'info'
           }));

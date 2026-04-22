@@ -137,13 +137,30 @@ const DetailRow = ({ label, value, badge }: { label: string, value: string, badg
                   <span className="text-sm font-bold text-gray-800">Agent Verification Photo</span>
                 </div>
                 {selectedOrder.listing?.verificationPhotoUrl ? (
-                  <img 
-                    src={`http://localhost:8080${selectedOrder.listing.verificationPhotoUrl}`} 
-                    alt="Agent Verification Evidence" 
-                    className="w-full h-48 object-cover rounded-lg border border-gray-200 mt-2" 
-                  />
+                  <div className="relative">
+                    <img 
+                      src={selectedOrder.listing.verificationPhotoUrl}
+                      alt="Agent Verification Evidence"
+                      className="w-full h-52 object-cover rounded-xl border border-gray-200 shadow-sm"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                        (e.target as HTMLImageElement).nextSibling && ((e.target as HTMLImageElement).nextSibling as HTMLElement).classList.remove('hidden');
+                      }}
+                    />
+                    <p className="hidden text-sm text-gray-500 italic mt-2 text-center">Image failed to load.</p>
+                    <a
+                      href={selectedOrder.listing.verificationPhotoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute bottom-2 right-2 px-3 py-1.5 bg-black/60 text-white text-xs font-bold rounded-lg backdrop-blur-sm hover:bg-black/80 transition-colors"
+                    >
+                      View Full ↗
+                    </a>
+                  </div>
                 ) : (
-                  <p className="text-sm text-gray-500 italic">No verification photo on file.</p>
+                  <div className="h-32 bg-gray-100 rounded-xl border border-dashed border-gray-300 flex items-center justify-center">
+                    <p className="text-sm text-gray-400 italic">No verification photo on file.</p>
+                  </div>
                 )}
               </div>
             </>

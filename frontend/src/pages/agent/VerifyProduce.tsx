@@ -3,6 +3,17 @@ import { Camera, Check, X, ChevronLeft, Package, CheckCircle2, Loader2 } from 'l
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { agentService } from '../../api/agentService';
 
+// Crop-type fallback images
+const getCropFallback = (cropType: string = '') => {
+  const c = cropType.toLowerCase();
+  if (c.includes('maize') || c.includes('corn')) return 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=400&q=80';
+  if (c.includes('coffee')) return 'https://images.unsplash.com/photo-1524414139215-35c99f80112c?auto=format&fit=crop&w=400&q=80';
+  if (c.includes('bean')) return 'https://images.unsplash.com/photo-1551326844-4df70f78d0e9?auto=format&fit=crop&w=400&q=80';
+  if (c.includes('potato')) return 'https://images.unsplash.com/photo-1508313880080-c4bef0730395?auto=format&fit=crop&w=400&q=80';
+  if (c.includes('rice')) return 'https://images.unsplash.com/photo-1536304929831-ee1ca9d44906?auto=format&fit=crop&w=400&q=80';
+  return 'https://images.unsplash.com/photo-1599839619722-39751411ea63?auto=format&fit=crop&w=400&q=80';
+};
+
 const VerifyProduce = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -141,27 +152,48 @@ const VerifyProduce = () => {
 
         {/* DYNAMIC TASK DETAILS CARD */}
         {listing && (
-          <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
-            <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
-              <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 flex-shrink-0">
-                <Package className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-bold text-[#3E2723] text-[17px] leading-tight">
-                  {listing.quantityKg}kg {listing.cropType}
-                </h3>
-                <p className="text-sm text-gray-500 font-medium mt-0.5">{listing.farmer?.fullName || 'Registered Farmer'}</p>
-              </div>
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+            {/* Cloudinary photo if already verified, else crop fallback thumbnail */}
+            <div className="relative h-32">
+              <img
+                src={listing.verificationPhotoUrl || getCropFallback(listing.cropType)}
+                alt={listing.cropType}
+                className="w-full h-full object-cover"
+                onError={(e) => { (e.target as HTMLImageElement).src = getCropFallback(listing.cropType); }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+              {listing.verificationPhotoUrl && (
+                <span className="absolute top-2 right-2 px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full">
+                  ✓ Photo on file
+                </span>
+              )}
+              <span className="absolute bottom-2 left-3 text-white font-bold text-sm">
+                {listing.quantityKg}kg {listing.cropType}
+              </span>
             </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Phone</p>
-                <p className="text-sm font-bold text-gray-800">{listing.farmer?.phoneNumber || 'N/A'}</p>
+
+            <div className="p-5">
+              <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
+                <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 flex-shrink-0">
+                  <Package className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-[#3E2723] text-[17px] leading-tight">
+                    {listing.quantityKg}kg {listing.cropType}
+                  </h3>
+                  <p className="text-sm text-gray-500 font-medium mt-0.5">{listing.farmer?.fullName || 'Registered Farmer'}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Target Price</p>
-                <p className="text-sm font-bold text-[#2E7D32]">{listing.pricePerKg} RWF/kg</p>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Phone</p>
+                  <p className="text-sm font-bold text-gray-800">{listing.farmer?.phoneNumber || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Target Price</p>
+                  <p className="text-sm font-bold text-[#2E7D32]">{listing.pricePerKg} RWF/kg</p>
+                </div>
               </div>
             </div>
           </div>
