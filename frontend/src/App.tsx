@@ -40,12 +40,14 @@ import AgentDashboard from './pages/agent/AgentDashboard'
 import OnboardFarmer from './pages/agent/OnboardFarmer'
 import VerifyProduce from './pages/agent/VerifyProduce'
 import MediateDispute from './pages/agent/MediateDispute'
+import AgentProfile from './pages/agent/Profile'
 
 // --- FARMER COMPONENTS ---
 import FarmerLayout from './layouts/FarmerLayout'
 import FarmerDashboard from './pages/farmer/FarmerDashboard'
-import SalesHistory from './pages/farmer/SalesHistory' // <-- NEW IMPORT
-import Payments from './pages/farmer/Payments'         // <-- NEW IMPORT
+import SalesHistory from './pages/farmer/SalesHistory'
+import Payments from './pages/farmer/Payments'
+import FarmerProfile from './pages/farmer/Profile'
 
 const LandingPage = () => (
   <main>
@@ -98,6 +100,7 @@ function App() {
         <Route path="/agent/verify" element={<ProtectedRoute allowedRoles={[Role.AGENT, `ROLE_${Role.AGENT}`]}><AgentLayout><VerifyProduce /></AgentLayout></ProtectedRoute>} />
         <Route path="/agent/onboard" element={<ProtectedRoute allowedRoles={[Role.AGENT, `ROLE_${Role.AGENT}`]}><AgentLayout><OnboardFarmer /></AgentLayout></ProtectedRoute>} />
         <Route path="/agent/mediate" element={<ProtectedRoute allowedRoles={[Role.AGENT, `ROLE_${Role.AGENT}`]}><AgentLayout><MediateDispute /></AgentLayout></ProtectedRoute>} />
+        <Route path="/agent/profile" element={<ProtectedRoute allowedRoles={[Role.AGENT, `ROLE_${Role.AGENT}`]}><AgentLayout><AgentProfile /></AgentLayout></ProtectedRoute>} />
 
         {/* Farmer Routes - Protected */}
         <Route path="/farmer" element={
@@ -119,6 +122,13 @@ function App() {
           <ProtectedRoute allowedRoles={[Role.FARMER, `ROLE_${Role.FARMER}`]}>
             <FarmerLayout>
               <Payments />
+            </FarmerLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/farmer/profile" element={
+          <ProtectedRoute allowedRoles={[Role.FARMER, `ROLE_${Role.FARMER}`]}>
+            <FarmerLayout>
+              <FarmerProfile />
             </FarmerLayout>
           </ProtectedRoute>
         } />

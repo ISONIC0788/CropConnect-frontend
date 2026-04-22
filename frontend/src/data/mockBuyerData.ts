@@ -12,6 +12,7 @@ export interface CropListing {
   distance: number; // in km
   verified: boolean;
   coordinates: { lat: number; lng: number }; // For the map
+  imageUrl?: string;
 }
 
 export const cropListings: CropListing[] = [

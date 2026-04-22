@@ -15,6 +15,13 @@ axiosClient.interceptors.request.use(
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // NEW: If data is FormData, do not force application/json.
+    // The browser MUST set the Content-Type automatically to inject the multipart boundary
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
+
     return config;
   },
   (error) => {

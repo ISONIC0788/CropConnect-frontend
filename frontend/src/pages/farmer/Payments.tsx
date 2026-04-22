@@ -21,7 +21,10 @@ const Payments = () => {
 
         // Calculate total earnings from all valid orders
         const sum = data.reduce((acc: number, order: any) => {
-          return acc + (order.totalAmount || order.bidAmount || 0);
+          if (order.escrowStatus === 'RELEASED') {
+            return acc + (order.finalAmount || order.totalAmount || order.bidAmount || 0);
+          }
+          return acc;
         }, 0);
 
         setTotalEarnings(sum);

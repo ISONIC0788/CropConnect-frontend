@@ -36,7 +36,7 @@ const EscrowWallet = () => {
       // Escrow balance = sum of HELD orders only
       const total = buyerOrders
         .filter((o: any) => o.escrowStatus === 'HELD')
-        .reduce((sum: number, o: any) => sum + (o.finalAmount || 0), 0);
+        .reduce((sum: number, o: any) => sum + (o.finalAmount || o.totalAmount || o.bidAmount || 0), 0);
       setBalance(total);
     } catch (error) {
       console.error("Failed to load wallet data:", error);
@@ -177,7 +177,7 @@ const EscrowWallet = () => {
 
                 <div className="flex flex-col items-end gap-2">
                   <p className="font-bold text-[#3E2723] text-[15px] leading-none">
-                    {(order.finalAmount || 0).toLocaleString()} RWF
+                    {(order.finalAmount || order.totalAmount || order.bidAmount || 0).toLocaleString()} RWF
                   </p>
                   <div className="mt-2">
                     {(escrow !== 'HELD' && escrow !== 'RELEASED') ? (

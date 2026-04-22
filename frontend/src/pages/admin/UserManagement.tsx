@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Clock, CheckCircle2, XCircle, Trash2, Edit2, Loader2, X, Plus, Eye, EyeOff } from 'lucide-react';
+import { Search, Filter, Clock, CheckCircle2, XCircle, Trash2, Edit2, Loader2, X, Plus, Eye, EyeOff, User, Phone, Mail, MapPin, Shield, Calendar, BadgeCheck } from 'lucide-react';
 import axiosClient from '../../api/axiosClient';
 
 // --- HELPER COMPONENTS ---
@@ -47,10 +47,18 @@ const UserManagement = () => {
   const [isVerifying, setIsVerifying] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
+  // View Modal State
+  const [viewingUser, setViewingUser] = useState<any | null>(null);
+
   // Edit Modal State
   const [editingUser, setEditingUser] = useState<any | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [editForm, setEditForm] = useState({ fullName: '', phoneNumber: '', role: '' });
+  const [editForm, setEditForm] = useState({
+    fullName: '', phoneNumber: '', role: '',
+    email: '', address: '', companyName: '',
+    registrationNumber: '', taxId: '', primaryCrops: '',
+    defaultSearchRadius: '', targetMonthlyVolume: ''
+  });
 
   // Add Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -83,14 +91,23 @@ const UserManagement = () => {
         return {
             id: u.userId,
             displayId: `USR-${(u.userId || '').substring(0, 4).toUpperCase()}`,
+            fullId: u.userId,
             name: u.fullName || 'Unknown User',
             phone: u.phoneNumber || '',
-            email: u.email || 'No email provided',
+            email: u.email || '',
             role: u.role ? u.role.toUpperCase() : 'UNKNOWN',
             displayRole: u.role ? u.role.charAt(0) + u.role.slice(1).toLowerCase() : 'Unknown',
             status: u.isVerified ? 'Verified' : 'Pending',
-            trustScore: u.isVerified ? 85 : 42,
-            district: displayDistrict
+            trustScore: u.trustScore || (u.isVerified ? 85 : 42),
+            district: displayDistrict,
+            companyName: u.companyName || null,
+            registrationNumber: u.registrationNumber || null,
+            taxId: u.taxId || null,
+            address: u.address || null,
+            primaryCrops: u.primaryCrops || null,
+            defaultSearchRadius: u.defaultSearchRadius || null,
+            targetMonthlyVolume: u.targetMonthlyVolume || null,
+            createdAt: u.createdAt || null,
         };
       });
 
@@ -160,7 +177,15 @@ const UserManagement = () => {
     setEditForm({
       fullName: user.name,
       phoneNumber: user.phone,
-      role: user.role
+      role: user.role,
+      email: user.email || '',
+      address: user.address || '',
+      companyName: user.companyName || '',
+      registrationNumber: user.registrationNumber || '',
+      taxId: user.taxId || '',
+      primaryCrops: Array.isArray(user.primaryCrops) ? user.primaryCrops.join(', ') : (user.primaryCrops || ''),
+      defaultSearchRadius: user.defaultSearchRadius || '',
+      targetMonthlyVolume: user.targetMonthlyVolume || ''
     });
   };
 
@@ -173,7 +198,15 @@ const UserManagement = () => {
       await axiosClient.put(`/users/${editingUser.id}`, {
         fullName: editForm.fullName,
         phoneNumber: editForm.phoneNumber,
-        role: editForm.role
+        role: editForm.role,
+        email: editForm.email || null,
+        address: editForm.address || null,
+        companyName: editForm.companyName || null,
+        registrationNumber: editForm.registrationNumber || null,
+        taxId: editForm.taxId || null,
+        primaryCrops: editForm.primaryCrops ? editForm.primaryCrops.split(',').map(s => s.trim()).filter(Boolean) : null,
+        defaultSearchRadius: editForm.defaultSearchRadius || null,
+        targetMonthlyVolume: editForm.targetMonthlyVolume || null,
       });
 
       // Update local state instantly
@@ -184,7 +217,13 @@ const UserManagement = () => {
               name: editForm.fullName, 
               phone: editForm.phoneNumber, 
               role: editForm.role,
-              displayRole: editForm.role.charAt(0) + editForm.role.slice(1).toLowerCase()
+              displayRole: editForm.role.charAt(0) + editForm.role.slice(1).toLowerCase(),
+              email: editForm.email,
+              address: editForm.address,
+              companyName: editForm.companyName,
+              registrationNumber: editForm.registrationNumber,
+              taxId: editForm.taxId,
+              primaryCrops: editForm.primaryCrops,
             } 
           : u
       ));
@@ -336,6 +375,13 @@ const UserManagement = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
                     <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => setViewingUser(user)}
+                        title="View Full Profile"
+                        className="p-1.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors cursor-pointer rounded-lg"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
                       {user.status === 'Pending' && (
                         <button 
                           onClick={() => handleVerifyUser(user.id)}
@@ -468,56 +514,188 @@ const UserManagement = () => {
       {/* EDIT USER MODAL */}
       {editingUser && (
         <div className="fixed inset-0 bg-[#3E2723]/30 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 w-full max-w-md overflow-hidden animate-in zoom-in-95">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 w-full max-w-2xl overflow-hidden animate-in zoom-in-95">
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-              <h3 className="font-bold text-[#3E2723] text-lg">Edit User Details</h3>
+              <div>
+                <h3 className="font-bold text-[#3E2723] text-lg">Edit User Profile</h3>
+                <p className="text-xs text-gray-400 mt-0.5">{editingUser.name} · {editingUser.displayId}</p>
+              </div>
               <button onClick={() => setEditingUser(null)} className="text-gray-400 hover:text-gray-600 transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
             
-            <form onSubmit={handleUpdateUser} className="p-6 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Full Name</label>
-                <input 
-                  type="text" 
-                  required
-                  value={editForm.fullName}
-                  onChange={(e) => setEditForm({...editForm, fullName: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Phone Number</label>
-                <input 
-                  type="text" 
-                  required
-                  value={editForm.phoneNumber}
-                  onChange={(e) => setEditForm({...editForm, phoneNumber: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]"
-                />
+            <form onSubmit={handleUpdateUser} className="max-h-[75vh] overflow-y-auto no-scrollbar">
+              <div className="p-6 space-y-6">
+
+                {/* Section: Identity */}
+                <div>
+                  <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <User className="w-3.5 h-3.5" /> Identity
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Full Name *</label>
+                      <input 
+                        type="text" required
+                        value={editForm.fullName}
+                        onChange={(e) => setEditForm({...editForm, fullName: e.target.value})}
+                        className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">System Role *</label>
+                      <select 
+                        value={editForm.role}
+                        onChange={(e) => setEditForm({...editForm, role: e.target.value})}
+                        className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32] bg-white"
+                      >
+                        <option value="FARMER">Farmer</option>
+                        <option value="BUYER">Buyer</option>
+                        <option value="AGENT">Agent</option>
+                        <option value="ADMIN">Admin</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section: Contact */}
+                <div>
+                  <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <Phone className="w-3.5 h-3.5" /> Contact
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Phone Number *</label>
+                      <input 
+                        type="text" required
+                        value={editForm.phoneNumber}
+                        onChange={(e) => setEditForm({...editForm, phoneNumber: e.target.value})}
+                        className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Email Address</label>
+                      <input 
+                        type="email"
+                        value={editForm.email}
+                        onChange={(e) => setEditForm({...editForm, email: e.target.value})}
+                        placeholder="user@example.com"
+                        className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Address</label>
+                      <input 
+                        type="text"
+                        value={editForm.address}
+                        onChange={(e) => setEditForm({...editForm, address: e.target.value})}
+                        placeholder="e.g. KG 123 St, Kigali"
+                        className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section: Role-Specific Fields */}
+                <div>
+                  {/* === BUYER-SPECIFIC FIELDS === */}
+                  {editForm.role === 'BUYER' && (
+                    <>
+                      <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <Shield className="w-3.5 h-3.5 text-amber-500" /> 🛒 Buyer — Company Details
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Company Name</label>
+                          <input type="text" value={editForm.companyName} onChange={e => setEditForm({...editForm, companyName: e.target.value})} placeholder="e.g. Kigali Fresh Ltd" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Registration No.</label>
+                          <input type="text" value={editForm.registrationNumber} onChange={e => setEditForm({...editForm, registrationNumber: e.target.value})} placeholder="e.g. RDB-123456" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Tax ID (TIN)</label>
+                          <input type="text" value={editForm.taxId} onChange={e => setEditForm({...editForm, taxId: e.target.value})} placeholder="e.g. 101234567" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Target Monthly Volume (kg)</label>
+                          <input type="text" value={editForm.targetMonthlyVolume} onChange={e => setEditForm({...editForm, targetMonthlyVolume: e.target.value})} placeholder="e.g. 10000" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]" />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Crops of Interest <span className="font-normal text-gray-400 normal-case">(comma separated)</span></label>
+                          <input type="text" value={editForm.primaryCrops} onChange={e => setEditForm({...editForm, primaryCrops: e.target.value})} placeholder="e.g. Maize, Beans, Coffee" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Default Search Radius (km)</label>
+                          <input type="text" value={editForm.defaultSearchRadius} onChange={e => setEditForm({...editForm, defaultSearchRadius: e.target.value})} placeholder="e.g. 50" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]" />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* === FARMER-SPECIFIC FIELDS === */}
+                  {editForm.role === 'FARMER' && (
+                    <>
+                      <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <Shield className="w-3.5 h-3.5 text-green-600" /> 🌾 Farmer — Farm Details
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Farm / Business Name</label>
+                          <input type="text" value={editForm.companyName} onChange={e => setEditForm({...editForm, companyName: e.target.value})} placeholder="e.g. Habimana Farm" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Default Search Radius (km)</label>
+                          <input type="text" value={editForm.defaultSearchRadius} onChange={e => setEditForm({...editForm, defaultSearchRadius: e.target.value})} placeholder="e.g. 30" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]" />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Crops Grown <span className="font-normal text-gray-400 normal-case">(comma separated)</span></label>
+                          <input type="text" value={editForm.primaryCrops} onChange={e => setEditForm({...editForm, primaryCrops: e.target.value})} placeholder="e.g. Maize, Coffee, Potatoes" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]" />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* === AGENT-SPECIFIC FIELDS === */}
+                  {editForm.role === 'AGENT' && (
+                    <>
+                      <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <Shield className="w-3.5 h-3.5 text-blue-600" /> 🧑‍💼 Agent — Agency Details
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Agency / Organization Name</label>
+                          <input type="text" value={editForm.companyName} onChange={e => setEditForm({...editForm, companyName: e.target.value})} placeholder="e.g. Rwanda Agricultural Board" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Registration Number</label>
+                          <input type="text" value={editForm.registrationNumber} onChange={e => setEditForm({...editForm, registrationNumber: e.target.value})} placeholder="e.g. RAB-2024-001" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Coverage Radius (km)</label>
+                          <input type="text" value={editForm.defaultSearchRadius} onChange={e => setEditForm({...editForm, defaultSearchRadius: e.target.value})} placeholder="e.g. 25" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400" />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* === ADMIN / OTHER: no extra fields === */}
+                  {(editForm.role === 'ADMIN' || !editForm.role) && (
+                    <div className="rounded-xl border border-dashed border-gray-200 p-5 text-center text-sm text-gray-400">
+                      No additional role-specific fields for Admin accounts.
+                    </div>
+                  )}
+                </div>
+
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">System Role</label>
-                <select 
-                  value={editForm.role}
-                  onChange={(e) => setEditForm({...editForm, role: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32] bg-white"
-                >
-                  <option value="FARMER">Farmer</option>
-                  <option value="BUYER">Buyer</option>
-                  <option value="AGENT">Agent</option>
-                  <option value="ADMIN">Admin</option>
-                </select>
-              </div>
-
-              <div className="pt-4 flex gap-3">
+              {/* Sticky Footer */}
+              <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex gap-3 sticky bottom-0">
                 <button 
                   type="button" 
                   onClick={() => setEditingUser(null)}
-                  className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-600 rounded-lg font-bold hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-600 rounded-lg font-bold hover:bg-gray-100 transition-colors"
                 >
                   Cancel
                 </button>
@@ -527,10 +705,231 @@ const UserManagement = () => {
                   className="flex-1 px-4 py-2.5 bg-[#2E7D32] text-white rounded-lg font-bold hover:bg-green-800 transition-colors flex justify-center items-center gap-2 disabled:opacity-50"
                 >
                   {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                  {isUpdating ? 'Saving...' : 'Save Changes'}
+                  {isUpdating ? 'Saving...' : 'Save All Changes'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* VIEW USER PROFILE MODAL */}
+      {viewingUser && (
+        <div className="fixed inset-0 bg-[#3E2723]/40 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-lg overflow-hidden animate-in zoom-in-95">
+            
+            {/* Modal Header with Avatar */}
+            <div className="bg-gradient-to-br from-[#2E7D32] to-[#1B5E20] px-6 py-6 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full blur-3xl -mr-12 -mt-12"></div>
+              <button 
+                onClick={() => setViewingUser(null)} 
+                className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors z-10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-4 relative z-10">
+                <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center border-2 border-white/30 flex-shrink-0">
+                  <span className="text-white font-black text-2xl">{viewingUser.name.charAt(0).toUpperCase()}</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-xl leading-snug">{viewingUser.name}</h3>
+                  <p className="text-green-200 text-sm font-medium mt-0.5">{viewingUser.displayId}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="px-2.5 py-0.5 bg-white/20 text-white text-xs font-bold rounded-full border border-white/30">{viewingUser.displayRole}</span>
+                    {viewingUser.status === 'Verified'
+                      ? <span className="flex items-center gap-1 px-2.5 py-0.5 bg-green-400/30 text-green-100 text-xs font-bold rounded-full border border-green-300/30"><BadgeCheck className="w-3 h-3" />Verified</span>
+                      : <span className="flex items-center gap-1 px-2.5 py-0.5 bg-yellow-400/20 text-yellow-100 text-xs font-bold rounded-full border border-yellow-300/20"><Clock className="w-3 h-3" />Pending</span>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto no-scrollbar">
+              
+              {/* Trust Score */}
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Trust Score</p>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-700 ${viewingUser.trustScore >= 80 ? 'bg-[#2E7D32]' : viewingUser.trustScore >= 50 ? 'bg-[#FBC02D]' : 'bg-red-500'}`}
+                      style={{ width: `${viewingUser.trustScore}%` }}
+                    ></div>
+                  </div>
+                  <span className="font-black text-[#3E2723] text-lg">{viewingUser.trustScore}<span className="text-sm font-medium text-gray-400">/100</span></span>
+                </div>
+              </div>
+
+              {/* Role-Specific Info Section */}
+              <div className="grid grid-cols-1 gap-3">
+
+                {/* Common: Phone */}
+                <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0"><Phone className="w-4 h-4 text-blue-600" /></div>
+                  <div><p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Phone</p><p className="font-semibold text-[#3E2723] text-sm">{viewingUser.phone || '—'}</p></div>
+                </div>
+
+                {/* Common: Email */}
+                <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
+                  <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0"><Mail className="w-4 h-4 text-purple-600" /></div>
+                  <div><p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Email</p><p className="font-semibold text-[#3E2723] text-sm">{viewingUser.email || '—'}</p></div>
+                </div>
+
+                {/* Common: Address */}
+                {viewingUser.address && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
+                    <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0"><MapPin className="w-4 h-4 text-orange-600" /></div>
+                    <div><p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Address</p><p className="font-semibold text-[#3E2723] text-sm">{viewingUser.address}</p></div>
+                  </div>
+                )}
+
+                {/* ── BUYER fields ── */}
+                {viewingUser.role === 'BUYER' && (
+                  <>
+                    <div className="mt-1 mb-1 px-1">
+                      <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">🛒 Buyer Details</span>
+                    </div>
+                    {viewingUser.companyName && (
+                      <div className="flex items-center gap-3 p-3 rounded-lg border border-amber-100 bg-amber-50/40">
+                        <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0"><User className="w-4 h-4 text-amber-600" /></div>
+                        <div>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Company</p>
+                          <p className="font-semibold text-[#3E2723] text-sm">{viewingUser.companyName}</p>
+                          {viewingUser.registrationNumber && <p className="text-xs text-gray-400 mt-0.5">Reg: {viewingUser.registrationNumber}</p>}
+                          {viewingUser.taxId && <p className="text-xs text-gray-400">TIN: {viewingUser.taxId}</p>}
+                        </div>
+                      </div>
+                    )}
+                    {viewingUser.primaryCrops && (
+                      <div className="flex items-start gap-3 p-3 rounded-lg border border-amber-100 bg-amber-50/40">
+                        <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0"><BadgeCheck className="w-4 h-4 text-amber-600" /></div>
+                        <div>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Crops of Interest</p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {(Array.isArray(viewingUser.primaryCrops) ? viewingUser.primaryCrops : String(viewingUser.primaryCrops).split(','))
+                              .map((c: string) => <span key={c} className="px-2 py-0.5 bg-amber-100 text-amber-800 text-xs font-bold rounded-full">{c.trim()}</span>)}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {(viewingUser.defaultSearchRadius || viewingUser.targetMonthlyVolume) && (
+                      <div className="grid grid-cols-2 gap-3">
+                        {viewingUser.defaultSearchRadius && (
+                          <div className="p-3 rounded-lg border border-amber-100 bg-amber-50/40 text-center">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Search Radius</p>
+                            <p className="font-black text-[#3E2723] text-lg">{viewingUser.defaultSearchRadius}<span className="text-xs font-medium text-gray-400"> km</span></p>
+                          </div>
+                        )}
+                        {viewingUser.targetMonthlyVolume && (
+                          <div className="p-3 rounded-lg border border-amber-100 bg-amber-50/40 text-center">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Monthly Target</p>
+                            <p className="font-black text-[#3E2723] text-lg">{viewingUser.targetMonthlyVolume}<span className="text-xs font-medium text-gray-400"> kg</span></p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* ── FARMER fields ── */}
+                {viewingUser.role === 'FARMER' && (
+                  <>
+                    <div className="mt-1 mb-1 px-1">
+                      <span className="text-[10px] font-black text-green-700 uppercase tracking-widest">🌾 Farmer Details</span>
+                    </div>
+                    {viewingUser.companyName && (
+                      <div className="flex items-center gap-3 p-3 rounded-lg border border-green-100 bg-green-50/40">
+                        <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0"><User className="w-4 h-4 text-green-700" /></div>
+                        <div><p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Farm / Business Name</p><p className="font-semibold text-[#3E2723] text-sm">{viewingUser.companyName}</p></div>
+                      </div>
+                    )}
+                    {viewingUser.primaryCrops && (
+                      <div className="flex items-start gap-3 p-3 rounded-lg border border-green-100 bg-green-50/40">
+                        <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0"><BadgeCheck className="w-4 h-4 text-green-700" /></div>
+                        <div>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Crops Grown</p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {(Array.isArray(viewingUser.primaryCrops) ? viewingUser.primaryCrops : String(viewingUser.primaryCrops).split(','))
+                              .map((c: string) => <span key={c} className="px-2 py-0.5 bg-green-100 text-green-800 text-xs font-bold rounded-full">{c.trim()}</span>)}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {viewingUser.defaultSearchRadius && (
+                      <div className="p-3 rounded-lg border border-green-100 bg-green-50/40 flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0"><MapPin className="w-4 h-4 text-green-700" /></div>
+                        <div><p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Coverage Radius</p><p className="font-semibold text-[#3E2723] text-sm">{viewingUser.defaultSearchRadius} km</p></div>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* ── AGENT fields ── */}
+                {viewingUser.role === 'AGENT' && (
+                  <>
+                    <div className="mt-1 mb-1 px-1">
+                      <span className="text-[10px] font-black text-blue-700 uppercase tracking-widest">🧑‍💼 Agent Details</span>
+                    </div>
+                    {viewingUser.companyName && (
+                      <div className="flex items-center gap-3 p-3 rounded-lg border border-blue-100 bg-blue-50/40">
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0"><User className="w-4 h-4 text-blue-600" /></div>
+                        <div>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Agency / Organization</p>
+                          <p className="font-semibold text-[#3E2723] text-sm">{viewingUser.companyName}</p>
+                          {viewingUser.registrationNumber && <p className="text-xs text-gray-400 mt-0.5">Reg: {viewingUser.registrationNumber}</p>}
+                        </div>
+                      </div>
+                    )}
+                    {viewingUser.defaultSearchRadius && (
+                      <div className="flex items-center gap-3 p-3 rounded-lg border border-blue-100 bg-blue-50/40">
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0"><MapPin className="w-4 h-4 text-blue-600" /></div>
+                        <div><p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Coverage Radius</p><p className="font-semibold text-[#3E2723] text-sm">{viewingUser.defaultSearchRadius} km</p></div>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Common: Member Since */}
+                {viewingUser.createdAt && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
+                    <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0"><Calendar className="w-4 h-4 text-gray-500" /></div>
+                    <div><p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Member Since</p><p className="font-semibold text-[#3E2723] text-sm">{new Date(viewingUser.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p></div>
+                  </div>
+                )}
+
+                {/* Common: Full UUID */}
+                <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
+                  <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0"><User className="w-4 h-4 text-gray-500" /></div>
+                  <div><p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Full User ID</p><p className="font-mono text-gray-500 text-xs break-all">{viewingUser.fullId || viewingUser.id}</p></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer Actions */}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3">
+              {viewingUser.status === 'Pending' && (
+                <button
+                  onClick={() => { handleVerifyUser(viewingUser.id); setViewingUser(null); }}
+                  className="flex-1 px-4 py-2.5 bg-[#2E7D32] text-white rounded-lg font-bold hover:bg-green-800 transition-colors flex items-center justify-center gap-2"
+                >
+                  <CheckCircle2 className="w-4 h-4" /> Verify User
+                </button>
+              )}
+              <button
+                onClick={() => { setViewingUser(null); openEditModal(viewingUser); }}
+                className="flex-1 px-4 py-2.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg font-bold hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
+              >
+                <Edit2 className="w-4 h-4" /> Edit Details
+              </button>
+              <button
+                onClick={() => setViewingUser(null)}
+                className="px-4 py-2.5 border border-gray-200 text-gray-600 rounded-lg font-bold hover:bg-gray-100 transition-colors"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
