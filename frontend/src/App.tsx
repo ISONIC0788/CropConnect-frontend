@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import { Role } from './types/enums';
 
 // --- LANDING PAGE COMPONENTS ---
@@ -74,6 +75,7 @@ const LogoutRoute = () => {
 function App() {
   return (
     <Router>
+      <Toaster richColors position="top-right" closeButton duration={4000} />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />

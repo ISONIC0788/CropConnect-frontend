@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Sprout, CheckCircle2, Clock, Banknote, Loader2, Package, Plus, X, Lock } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
 import axiosClient from '../../api/axiosClient';
+import { toast } from 'sonner';
 
 // Crop-type fallback images (used when no Cloudinary photo is available)
 const getCropFallback = (cropType: string = '') => {
@@ -64,7 +65,7 @@ const FarmerDashboard = () => {
           if (token) {
             const decoded: any = jwtDecode(token);
             if (decoded.userId === payload.farmerId) {
-              alert(`🔔 Live Offer Alert! ${payload.buyerName} just bid ${payload.amount} RWF for your produce!`);
+          toast(`🔔 Live Offer! ${payload.buyerName} bid ${payload.amount} RWF`);
               fetchData(); // Instantly refresh
             }
           }
@@ -110,7 +111,7 @@ const FarmerDashboard = () => {
 
     } catch (error) {
       console.error("Failed to add listing:", error);
-      alert("Error adding harvest.");
+      toast.error('Error adding harvest. Please try again.');
     } finally {
       setIsCreating(false);
     }
@@ -122,11 +123,11 @@ const FarmerDashboard = () => {
     setProcessingId(bidId);
     try {
       await axiosClient.put(`/bids/${bidId}/accept`);
-      alert("Deal Accepted! Your payment is now secured in escrow. Awaiting Logistics.");
+      toast.success('Deal accepted! Your payment is secured in escrow.');
       await fetchData(); // Refresh inventory and bids so it shows as LOCKED
     } catch (err) {
       console.error("Failed to accept bid:", err);
-      alert("Failed to accept bid. It may have expired.");
+      toast.error('Failed to accept bid. It may have expired.');
     } finally {
       setProcessingId(null);
     }

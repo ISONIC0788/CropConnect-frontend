@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import InventoryCard from '../../components/buyer/InventoryCard';
 import axiosClient from '../../api/axiosClient';
+import { toast } from 'sonner';
 
 // Utility to calculate real distance between two GPS coordinates
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -175,12 +176,12 @@ const Watchlist = () => {
       });
 
       await Promise.all(bidPromises);
-      alert("Bids placed successfully! Redirecting to your Escrow Wallet.");
+      toast.success('Bids placed! Redirecting to your Escrow Wallet...');
       navigate('/buyer/wallet');
       removeSelected(); // Clear them from watchlist since they are now orders
     } catch (error) {
       console.error("Failed to place bulk bids:", error);
-      alert("Error placing bids. Make sure you are logged in as a Buyer.");
+      toast.error('Error placing bids. Make sure you are logged in as a Buyer.');
     } finally {
       setIsBidding(false);
     }

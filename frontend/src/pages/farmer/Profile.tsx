@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Sprout, Mail, Phone, MapPin, ShieldCheck, Edit3, Leaf, Loader2, X, Eye, EyeOff, Lock, User } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
 import axiosClient from '../../api/axiosClient';
+import { toast } from 'sonner';
 
 const FarmerProfile = () => {
   const [user, setUser] = useState<any>(null);
@@ -40,9 +41,10 @@ const FarmerProfile = () => {
       const res = await axiosClient.get(`/users/${decoded.userId}`);
       setUser(res.data);
       setIsEditModalOpen(false);
+      toast.success('Farm profile updated successfully!');
     } catch (err) {
       console.error(err);
-      alert('Failed to update profile');
+      toast.error('Failed to update profile');
     } finally {
       setIsSaving(false);
     }
@@ -54,11 +56,11 @@ const FarmerProfile = () => {
       setIsSaving(true);
       const decoded: any = jwtDecode(localStorage.getItem('jwt_token') || '');
       await axiosClient.put(`/users/${decoded.userId}/password`, { newPassword });
-      alert('Password changed successfully!');
+      toast.success('Password changed successfully!');
       setIsPasswordModalOpen(false);
       setNewPassword('');
     } catch (err) {
-      alert('Failed to change password');
+      toast.error('Failed to change password');
     } finally {
       setIsSaving(false);
     }

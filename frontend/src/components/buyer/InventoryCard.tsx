@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle2, Zap, Star } from 'lucide-react';
+import { toast } from 'sonner';
 import type { CropListing } from '../../data/mockBuyerData';
 
 interface InventoryCardProps {
@@ -116,7 +117,7 @@ const InventoryCard = ({ listing, isSelected, onToggle }: InventoryCardProps) =>
             className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 hover:bg-green-50 text-gray-600 hover:text-[#2E7D32] border border-gray-200 hover:border-green-200 rounded-lg text-xs font-bold transition-colors"
             onClick={(e) => {
               e.stopPropagation(); // Prevents checking the card when clicking the button
-              alert(`Quick bid opened for ${listing.crop}`);
+              toast(`Quick bid opened for ${listing.crop} — select it and use Bulk Bid`);
             }}
           >
             <Zap className="w-3 h-3 fill-current" /> Quick Bid

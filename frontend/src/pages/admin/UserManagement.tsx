@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Clock, CheckCircle2, XCircle, Trash2, Edit2, Loader2, X, Plus, Eye, EyeOff, User, Phone, Mail, MapPin, Shield, Calendar, BadgeCheck } from 'lucide-react';
 import axiosClient from '../../api/axiosClient';
+import { toast } from 'sonner';
 
 // --- HELPER COMPONENTS ---
 const StatusBadge = ({ status }: { status: string }) => {
@@ -139,7 +140,7 @@ const UserManagement = () => {
       setAddForm({ fullName: '', phoneNumber: '', password: '', role: 'FARMER' });
     } catch (error) {
       console.error("Failed to create user:", error);
-      alert("Error creating user. Check if the phone number already exists.");
+      toast.error('Phone number already exists or invalid data.');
     } finally {
       setIsCreating(false);
     }
@@ -152,7 +153,7 @@ const UserManagement = () => {
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: 'Verified', trustScore: 85 } : u));
     } catch (error) {
       console.error("Failed to verify user:", error);
-      alert("Error verifying user.");
+      toast.error('Failed to verify user.');
     } finally {
       setIsVerifying(null);
     }
@@ -166,7 +167,7 @@ const UserManagement = () => {
       setUsers(prev => prev.filter(u => u.id !== userId));
     } catch (error) {
       console.error("Failed to delete user:", error);
-      alert("Error deleting user.");
+      toast.error('Failed to delete user.');
     } finally {
       setIsDeleting(null);
     }
@@ -230,7 +231,7 @@ const UserManagement = () => {
       setEditingUser(null);
     } catch (error) {
       console.error("Failed to update user:", error);
-      alert("Error updating user.");
+      toast.error('Failed to update user.');
     } finally {
       setIsUpdating(false);
     }

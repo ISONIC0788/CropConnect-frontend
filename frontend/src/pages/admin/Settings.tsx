@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Globe, Bell, Shield, Database, User as UserIcon, Eye, EyeOff, Loader2, X } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
+import { toast } from 'sonner';
 import axiosClient from '../../api/axiosClient';
 
 // --- REUSABLE UI COMPONENTS ---
@@ -129,10 +130,10 @@ const Settings = () => {
         fullName: adminUser.fullName,
         email: adminUser.email,
       });
-      alert('Admin Profile updated successfully!');
+      toast.success('Admin profile updated successfully!');
     } catch (err) {
       console.error(err);
-      alert('Error updating profile');
+      toast.error('Error updating profile');
     } finally {
       setIsSavingProfile(false);
     }
@@ -146,12 +147,12 @@ const Settings = () => {
       await axiosClient.put(`/users/${decoded.userId}/password`, {
         newPassword
       });
-      alert('Password changed successfully!');
+      toast.success('Password changed successfully!');
       setShowPasswordModal(false);
       setNewPassword('');
     } catch (err) {
       console.error(err);
-      alert('Error changing password');
+      toast.error('Error changing password');
     } finally {
       setIsChangingPassword(false);
     }
