@@ -4,27 +4,24 @@ import { jwtDecode } from 'jwt-decode';
 import axiosClient from '../../api/axiosClient';
 
 // --- HELPER FUNCTIONS FOR MAPPING BACKEND DATA ---
-const getStageIndex = (status: string) => {
-  switch (status?.toUpperCase()) {
-    case 'PENDING': return 0;
-    case 'LOCKED': case 'ACCEPTED': return 1;
-    case 'QUALITY_CHECK': return 2;
-    case 'IN_TRANSIT': return 3;
-    case 'DELIVERED': case 'COMPLETED': return 4;
-    default: return 0;
-  }
+const getStageIndex = (escrowStatus: string, logisticsStatus: string) => {
+  const ls = logisticsStatus?.toUpperCase();
+  if (ls === 'DELIVERED') return 4;
+  if (ls === 'IN_TRANSIT') return 3;
+  if (ls === 'QUALITY_VERIFIED' || ls === 'QUALITY_CHECK') return 2;
+  const es = escrowStatus?.toUpperCase();
+  if (es === 'HELD' || es === 'RELEASED') return 1;
+  return 0; // pending
 };
 
-const getStatusDisplay = (status: string) => {
-  switch (status?.toUpperCase()) {
-    case 'PENDING': return { label: 'Pending', badge: 'bg-gray-100 text-gray-500' };
-    case 'LOCKED': case 'ACCEPTED': return { label: 'Locked', badge: 'bg-[#FFF9E6] text-[#FBC02D]' };
-    case 'QUALITY_CHECK': return { label: 'Quality Check', badge: 'bg-blue-50 text-[#3498DB]' };
-    case 'PENDING_PICKUP': return { label: 'Pending Pickup', badge: 'bg-yellow-50 text-yellow-600' };
-    case 'IN_TRANSIT': return { label: 'In Transit', badge: 'bg-green-50 text-[#2E7D32]' };
-    case 'DELIVERED': case 'COMPLETED': return { label: 'Delivered', badge: 'bg-green-100 text-[#166534]' };
-    default: return { label: status || 'Unknown', badge: 'bg-gray-100 text-gray-500' };
-  }
+const getStatusDisplay = (escrowStatus: string, logisticsStatus: string) => {
+  const ls = logisticsStatus?.toUpperCase();
+  const es = escrowStatus?.toUpperCase();
+  if (ls === 'DELIVERED') return { label: 'Delivered', badge: 'bg-green-100 text-[#166534]' };
+  if (ls === 'IN_TRANSIT') return { label: 'In Transit', badge: 'bg-green-50 text-[#2E7D32]' };
+  if (ls === 'QUALITY_VERIFIED' || ls === 'QUALITY_CHECK') return { label: 'Quality Check', badge: 'bg-blue-50 text-[#3498DB]' };
+  if (es === 'HELD') return { label: 'Locked/Pending Pickup', badge: 'bg-[#FFF9E6] text-[#FBC02D]' };
+  return { label: 'Pending Payment', badge: 'bg-gray-100 text-gray-500' };
 };
 
 const ActiveOrders = () => {
@@ -49,17 +46,17 @@ const ActiveOrders = () => {
         const mappedOrders = rawOrders
           .filter((order: any) => order.buyer?.userId === buyerId)
           .map((order: any) => {
-            const statusInfo = getStatusDisplay(order.status);
+            const statusInfo = getStatusDisplay(order.escrowStatus, order.logisticsStatus);
             return {
               id: order.orderId ? `ORD-${order.orderId.substring(0, 4).toUpperCase()}` : 'ORD-????',
               originalId: order.orderId,
               crop: order.listing?.cropType || 'Unknown Crop',
               status: statusInfo.label,
               rawLogisticsStatus: order.logisticsStatus,
-              stageIndex: getStageIndex(order.status),
+              stageIndex: getStageIndex(order.escrowStatus, order.logisticsStatus),
               farmer: order.listing?.farmer?.fullName || 'Registered Farmer',
               district: 'Rwanda', // Using default unless postGIS exact region mapping is available
-              amount: `${(order.totalAmount || order.bidAmount || 0).toLocaleString()} RWF`,
+              amount: `${(order.finalAmount || order.totalAmount || order.bidAmount || 0).toLocaleString()} RWF`,
               weight: `${(order.listing?.quantityKg || 0).toLocaleString()} kg`,
               date: order.createdAt ? new Date(order.createdAt).toISOString().split('T')[0] : 'Just now',
               statusBadge: statusInfo.badge
@@ -94,17 +91,17 @@ const ActiveOrders = () => {
         const mappedOrders = response.data
           .filter((order: any) => order.buyer?.userId === buyerId)
           .map((order: any) => {
-            const statusInfo = getStatusDisplay(order.logisticsStatus);
+            const statusInfo = getStatusDisplay(order.escrowStatus, order.logisticsStatus);
             return {
               id: order.orderId ? `ORD-${order.orderId.substring(0, 4).toUpperCase()}` : 'ORD-????',
               originalId: order.orderId,
               crop: order.listing?.cropType || 'Unknown Crop',
               status: statusInfo.label,
               rawLogisticsStatus: order.logisticsStatus,
-              stageIndex: getStageIndex(order.logisticsStatus),
+              stageIndex: getStageIndex(order.escrowStatus, order.logisticsStatus),
               farmer: order.listing?.farmer?.fullName || 'Registered Farmer',
               district: 'Rwanda',
-              amount: `${(order.totalAmount || order.bidAmount || 0).toLocaleString()} RWF`,
+              amount: `${(order.finalAmount || order.totalAmount || order.bidAmount || 0).toLocaleString()} RWF`,
               weight: `${(order.listing?.quantityKg || 0).toLocaleString()} kg`,
               date: order.createdAt ? new Date(order.createdAt).toISOString().split('T')[0] : 'Just now',
               statusBadge: statusInfo.badge

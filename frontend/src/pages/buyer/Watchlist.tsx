@@ -5,6 +5,18 @@ import { jwtDecode } from 'jwt-decode';
 import InventoryCard from '../../components/buyer/InventoryCard';
 import axiosClient from '../../api/axiosClient';
 
+// Utility to calculate real distance between two GPS coordinates
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // Earth radius in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
+  return Math.round(R * c); // Distance in km, rounded to whole number
+}
+
 const Watchlist = () => {
   const navigate = useNavigate();
   
@@ -21,7 +33,51 @@ const Watchlist = () => {
   const [isBidding, setIsBidding] = useState(false);
   const [marketTrends, setMarketTrends] = useState<Record<string, number>>({});
 
+  const [buyerLat, setBuyerLat] = useState<number>(-1.9441);
+  const [buyerLng, setBuyerLng] = useState<number>(30.0619);
+  const [buyerLocationLoaded, setBuyerLocationLoaded] = useState(false);
+
   useEffect(() => {
+    const syncWatchlist = () => {
+      const local = localStorage.getItem('watchlist_ids');
+      if (local) {
+        setSavedIds(JSON.parse(local));
+      } else {
+        setSavedIds([]);
+      }
+    };
+    
+    window.addEventListener('watchlistUpdated', syncWatchlist);
+    window.addEventListener('storage', syncWatchlist); // Optional: also handle manual storage events
+    return () => {
+      window.removeEventListener('watchlistUpdated', syncWatchlist);
+      window.removeEventListener('storage', syncWatchlist);
+    };
+  }, []);
+
+  useEffect(() => {
+    const fetchBuyerLocation = async () => {
+      try {
+        const token = localStorage.getItem('jwt_token');
+        if (!token) { setBuyerLocationLoaded(true); return; }
+        const decoded: any = jwtDecode(token);
+        const buyerId = decoded.userId;
+        const profileRes = await axiosClient.get(`/users/${buyerId}`);
+        if (profileRes.data?.location) {
+          setBuyerLat(profileRes.data.location.latitude);
+          setBuyerLng(profileRes.data.location.longitude);
+        }
+      } catch (e) {
+        console.error("Failed to fetch buyer location:", e);
+      } finally {
+        setBuyerLocationLoaded(true);
+      }
+    };
+    fetchBuyerLocation();
+  }, []);
+
+  useEffect(() => {
+    if (!buyerLocationLoaded) return;
     const fetchData = async () => {
       try {
         // 1. Fetch real listings
@@ -45,7 +101,10 @@ const Watchlist = () => {
               lat: item.location?.latitude || 0,
               lng: item.location?.longitude || 0
             },
-            distance: 0 // Not needed for watchlist
+            imageUrl: item.verificationPhotoUrl || undefined,
+            distance: item.location ? 
+              calculateDistance(buyerLat, buyerLng, item.location.latitude, item.location.longitude) 
+              : 0
           }));
           
         setListings(mappedData);
@@ -75,7 +134,7 @@ const Watchlist = () => {
     };
 
     fetchData();
-  }, [savedIds]); // Re-fetch trends if items are added/removed
+  }, [savedIds, buyerLocationLoaded, buyerLat, buyerLng]); // Re-fetch trends if items are added/removed
 
   // Sync saved items to local storage
   useEffect(() => {

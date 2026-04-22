@@ -49,14 +49,41 @@ const SourcingMap = () => {
   const [loading, setLoading] = useState(true);
   const [isBidding, setIsBidding] = useState(false);
 
+  const [buyerLat, setBuyerLat] = useState<number>(WAREHOUSE_LAT);
+  const [buyerLng, setBuyerLng] = useState<number>(WAREHOUSE_LNG);
+  const [buyerLocationLoaded, setBuyerLocationLoaded] = useState(false);
+
   useEffect(() => {
+    const fetchBuyerLocation = async () => {
+      try {
+        const token = localStorage.getItem('jwt_token');
+        if (!token) { setBuyerLocationLoaded(true); return; }
+        const decoded: any = jwtDecode(token);
+        const buyerId = decoded.userId;
+        const profileRes = await axiosClient.get(`/users/${buyerId}`);
+        if (profileRes.data?.location) {
+          setBuyerLat(profileRes.data.location.latitude);
+          setBuyerLng(profileRes.data.location.longitude);
+        }
+      } catch (e) {
+        console.error("Failed to fetch buyer location:", e);
+      } finally {
+        setBuyerLocationLoaded(true);
+      }
+    };
+    fetchBuyerLocation();
+  }, []);
+
+  useEffect(() => {
+    if (!buyerLocationLoaded) return;
+
     const fetchRealData = async () => {
       setLoading(true);
       try {
         // Construct query parameters for the backend filter endpoint
         const params: any = {
-          longitude: WAREHOUSE_LNG,
-          latitude: WAREHOUSE_LAT,
+          longitude: buyerLng,
+          latitude: buyerLat,
           radiusKm: radius
         };
 
@@ -85,9 +112,10 @@ const SourcingMap = () => {
               lat: item.location?.latitude || 0,
               lng: item.location?.longitude || 0
             },
-            // Calculate distance dynamically from the Warehouse
+            imageUrl: item.verificationPhotoUrl || undefined,
+            // Calculate distance dynamically from the Buyer
             distance: item.location ? 
-              calculateDistance(WAREHOUSE_LAT, WAREHOUSE_LNG, item.location.latitude, item.location.longitude) 
+              calculateDistance(buyerLat, buyerLng, item.location.latitude, item.location.longitude) 
               : 0
           }));
           
@@ -105,7 +133,7 @@ const SourcingMap = () => {
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [radius, selectedCrop]); // Re-fetch automatically when radius or crop changes
+  }, [radius, selectedCrop, buyerLocationLoaded, buyerLat, buyerLng]); // Re-fetch automatically when radius or crop changes
 
   // THE FIX: The function that handles the Bulk Bid button click
   const handlePlaceBulkBid = async () => {

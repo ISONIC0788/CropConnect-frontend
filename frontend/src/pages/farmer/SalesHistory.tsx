@@ -26,8 +26,8 @@ const SalesHistory = () => {
           quantityKg: order.listing?.quantityKg || 0,
           buyerName: order.buyer?.fullName || 'Registered Buyer',
           buyerPhone: order.buyer?.phoneNumber || 'No phone provided',
-          amount: order.totalAmount || order.bidAmount || 0,
-          status: order.status || 'COMPLETED'
+          amount: order.finalAmount || order.totalAmount || order.bidAmount || 0,
+          status: order.logisticsStatus || order.status || 'COMPLETED'
         }));
 
         setOrders(mappedOrders);
