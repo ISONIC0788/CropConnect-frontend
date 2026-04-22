@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { ReactNode } from 'react';
-import { LayoutDashboard, Bell, Search, Menu, X, Users, Package, ShoppingCart, Gavel, CheckCircle2, Clock } from 'lucide-react';
-import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { LayoutDashboard, Bell, Search, Menu, X, Users, Package, ShoppingCart, Gavel, Clock } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import AdminSidebar from '../pages/admin/AdminSidebar';
 import axiosClient from '../api/axiosClient';
 
