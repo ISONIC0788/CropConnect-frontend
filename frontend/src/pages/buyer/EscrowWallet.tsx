@@ -155,9 +155,8 @@ const EscrowWallet = () => {
                 className="bg-white rounded-xl border border-gray-200 shadow-sm px-6 py-5 flex items-center justify-between hover:shadow-md transition-all duration-200"
               >
                 <div className="flex items-center gap-5">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    escrow === 'HELD' ? 'bg-green-50' : escrow === 'RELEASED' ? 'bg-gray-100' : 'bg-yellow-50'
-                  }`}>
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${escrow === 'HELD' ? 'bg-green-50' : escrow === 'RELEASED' ? 'bg-gray-100' : 'bg-yellow-50'
+                    }`}>
                     {escrow === 'HELD' ? (
                       <ShieldAlert className="w-5 h-5 text-[#166534]" />
                     ) : escrow === 'RELEASED' ? (

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FileText, MessageSquare, Shield, Truck, Send, CheckCircle2, User, Loader2 } from 'lucide-react';
+import { FileText, MessageSquare, Shield, Truck, Send, CheckCircle2, User, Loader2, X } from 'lucide-react';
 import axiosClient from '../../api/axiosClient';
 
 // --- MAIN COMPONENT ---
@@ -8,6 +8,7 @@ const DisputeArbitration = () => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Fetch all orders on mount
   useEffect(() => {
@@ -91,7 +92,10 @@ const DetailRow = ({ label, value, badge }: { label: string, value: string, badg
             return (
               <button
                 key={o.orderId}
-                onClick={() => setSelectedId(o.orderId)}
+                onClick={() => {
+                  setSelectedId(o.orderId);
+                  setIsModalOpen(true);
+                }}
                 className={`w-full text-left p-4 rounded-xl border transition-all ${
                   isSelected 
                     ? 'bg-green-50/50 border-green-600 shadow-sm' 
@@ -111,7 +115,7 @@ const DetailRow = ({ label, value, badge }: { label: string, value: string, badg
       </div>
 
       {/* COLUMN 2: TRANSACTION DETAILS */}
-      <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col h-full overflow-hidden">
+      <div className="hidden xl:flex flex-1 bg-white rounded-xl border border-gray-200 shadow-sm flex-col h-full overflow-hidden">
         <div className="p-6 flex-1 overflow-y-auto no-scrollbar">
           <h2 className="font-serif text-xl font-bold text-brown flex items-center gap-2 mb-6">
             <FileText className="w-5 h-5 text-primary" />
@@ -187,7 +191,7 @@ const DetailRow = ({ label, value, badge }: { label: string, value: string, badg
       </div>
 
       {/* COLUMN 3: IMMUTABLE SMS AUDIT TRAIL */}
-      <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col h-full overflow-hidden">
+      <div className="hidden xl:flex flex-1 bg-white rounded-xl border border-gray-200 shadow-sm flex-col h-full overflow-hidden">
         <div className="p-6 border-b border-gray-100">
           <h2 className="font-serif text-xl font-bold text-brown flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-primary" />
@@ -198,17 +202,17 @@ const DetailRow = ({ label, value, badge }: { label: string, value: string, badg
         
         <div className="p-6 flex-1 overflow-y-auto no-scrollbar space-y-4 bg-gray-50/30">
           {auditLogs.length === 0 && <p className="text-gray-400">No logs discovered.</p>}
-          {auditLogs.map((log: any) => {
+          {auditLogs.map((log: any, idx: number) => {
             let bgClass = "bg-gray-100/80 border-gray-200"; // Default
-            if (log.actionType.includes("ESCROW")) bgClass = "bg-[#FFF9E6] border-[#FDE68A]";
-            else if (log.actionType.includes("BID")) bgClass = "bg-[#ECFDF5] border-[#A7F3D0]";
+            if (log.actionType && log.actionType.includes("ESCROW")) bgClass = "bg-[#FFF9E6] border-[#FDE68A]";
+            else if (log.actionType && log.actionType.includes("BID")) bgClass = "bg-[#ECFDF5] border-[#A7F3D0]";
 
             return (
-              <div key={log.auditId} className={`p-4 rounded-lg border flex flex-col gap-1 ${bgClass}`}>
+              <div key={log.logId || idx} className={`p-4 rounded-lg border flex flex-col gap-1 ${bgClass}`}>
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-sm font-bold text-gray-800">{log.actionType}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-gray-500">{new Date(log.timestamp).toLocaleString()}</span>
+                    <span className="text-[11px] text-gray-500">{new Date(log.createdAt || Date.now()).toLocaleString()}</span>
                     <CheckCircle2 className="w-3.5 h-3.5 text-[#2E7D32]" />
                   </div>
                 </div>
@@ -220,6 +224,88 @@ const DetailRow = ({ label, value, badge }: { label: string, value: string, badg
           })}
         </div>
       </div>
+      {/* MOBILE MODAL OVERLAY (Details + Audit Trail) */}
+      {isModalOpen && selectedOrder && (
+        <div className="xl:hidden fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
+          <div className="relative bg-white w-full max-w-2xl h-[90vh] sm:h-auto sm:max-h-[90vh] rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300">
+            
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-primary" />
+                <h3 className="font-bold text-[#3E2723]">Transaction Details</h3>
+              </div>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-400"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
+              
+              {/* Transaction Segment */}
+              <section className="space-y-1">
+                <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Order Information</div>
+                <DetailRow label="Order ID" value={selectedOrder.orderId} />
+                <DetailRow label="Farmer" value={selectedOrder.listing?.farmer?.fullName} />
+                <DetailRow label="Buyer" value={selectedOrder.buyer?.fullName} />
+                <DetailRow label="Escrow" value={`${selectedOrder.finalAmount?.toLocaleString()} RWF`} badge={selectedOrder.escrowStatus} />
+                <DetailRow label="Logistics" value={selectedOrder.logisticsStatus} />
+              </section>
+
+              {/* Documentation Segment (Verification Photo) */}
+              <section>
+                <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <User className="w-3.5 h-3.5" /> Verification Photo
+                </h4>
+                {selectedOrder.listing?.verificationPhotoUrl ? (
+                  <img 
+                    src={selectedOrder.listing.verificationPhotoUrl} 
+                    className="w-full h-48 object-cover rounded-xl border border-gray-200 shadow-sm"
+                    alt="Evidence"
+                  />
+                ) : (
+                  <div className="p-10 bg-gray-50 border border-dashed border-gray-200 rounded-xl text-center text-xs text-gray-400">
+                    No photo evidence available.
+                  </div>
+                )}
+              </section>
+
+              {/* Audit Trail Segment */}
+              <section>
+                <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <MessageSquare className="w-3.5 h-3.5" /> Immutable Audit Trail
+                </h4>
+                <div className="space-y-3">
+                  {auditLogs.length === 0 ? (
+                    <p className="text-xs text-gray-400 italic">No logs discovered.</p>
+                  ) : (
+                    auditLogs.map((log: any, idx) => (
+                      <div key={log.logId || idx} className="p-3 bg-gray-50 border border-gray-100 rounded-lg">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-[11px] font-bold text-gray-700">{log.actionType}</span>
+                          <span className="text-[9px] text-gray-400">{new Date(log.createdAt || Date.now()).toLocaleTimeString()}</span>
+                        </div>
+                        <p className="text-[11px] text-gray-600 leading-tight">{log.details}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </section>
+            </div>
+
+            {/* Modal Footer Actions */}
+            <div className="p-4 border-t border-gray-100 bg-gray-50 grid grid-cols-2 gap-3">
+              <button className="bg-[#166534] text-white py-3.5 rounded-xl text-xs font-bold shadow-sm">Release Escrow</button>
+              <button className="bg-white border border-red-200 text-red-600 py-3.5 rounded-xl text-xs font-bold">Refund Buyer</button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

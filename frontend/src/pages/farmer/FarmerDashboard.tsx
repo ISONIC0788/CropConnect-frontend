@@ -55,7 +55,7 @@ const FarmerDashboard = () => {
 
     // CONNECT TO NATIVE WEBSOCKET FOR REAL-TIME OFFERS
     const ws = new WebSocket('ws://localhost:8080/api/ws/notifications');
-    
+
     ws.onmessage = (event) => {
       try {
         const payload = JSON.parse(event.data);
@@ -65,7 +65,7 @@ const FarmerDashboard = () => {
           if (token) {
             const decoded: any = jwtDecode(token);
             if (decoded.userId === payload.farmerId) {
-          toast(`🔔 Live Offer! ${payload.buyerName} bid ${payload.amount} RWF`);
+              toast(`🔔 Live Offer! ${payload.buyerName} bid ${payload.amount} RWF`);
               fetchData(); // Instantly refresh
             }
           }
@@ -119,7 +119,7 @@ const FarmerDashboard = () => {
 
   const handleAcceptBid = async (bidId: string) => {
     if (!window.confirm("Accept this offer and lock your produce? This will secure the buyer's funds in escrow.")) return;
-    
+
     setProcessingId(bidId);
     try {
       await axiosClient.put(`/bids/${bidId}/accept`);
@@ -143,7 +143,7 @@ const FarmerDashboard = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6 pb-24 space-y-8 animate-in fade-in duration-500">
-      
+
       {/* HEADER SECTION */}
       <div className="flex items-center justify-between bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
         <div>
@@ -151,7 +151,7 @@ const FarmerDashboard = () => {
           <p className="text-gray-500 text-sm mt-1">Manage harvests and incoming buyer offers</p>
         </div>
         <div className="bg-green-100 p-4 rounded-full">
-            <Sprout className="w-8 h-8 text-[#2E7D32]" />
+          <Sprout className="w-8 h-8 text-[#2E7D32]" />
         </div>
       </div>
 
@@ -159,16 +159,16 @@ const FarmerDashboard = () => {
       <section>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-bold text-[#3E2723] flex items-center gap-2">
-              <Package className="w-5 h-5 text-[#2E7D32]" /> Active Listings
+            <Package className="w-5 h-5 text-[#2E7D32]" /> Active Listings
           </h2>
-          <button 
+          <button
             onClick={() => setIsAddModalOpen(true)}
             className="flex items-center gap-1.5 bg-[#2E7D32] text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-green-800 transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4" /> List Produce
           </button>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {listings.length === 0 ? (
             <div className="col-span-full py-12 text-center bg-white rounded-3xl border border-dashed border-gray-300 text-gray-400">
@@ -177,7 +177,7 @@ const FarmerDashboard = () => {
           ) : (
             listings.map(item => (
               <div key={item.listingId} className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden relative">
-                
+
                 {/* Cloudinary crop image */}
                 {item.verificationPhotoUrl ? (
                   <div className="relative h-36">
@@ -203,15 +203,14 @@ const FarmerDashboard = () => {
                 )}
 
                 {/* Visual Status Bar */}
-                <div className={`absolute top-0 left-0 w-1 h-full ${
-                  item.status === 'LOCKED' ? 'bg-blue-500' : 
-                  item.isVerified ? 'bg-[#2E7D32]' : 'bg-yellow-400'
-                }`}></div>
+                <div className={`absolute top-0 left-0 w-1 h-full ${item.status === 'LOCKED' ? 'bg-blue-500' :
+                    item.isVerified ? 'bg-[#2E7D32]' : 'bg-yellow-400'
+                  }`}></div>
 
                 <div className="p-4">
                   <div className="flex justify-between items-start mb-3">
                     <h3 className="font-bold text-[#3E2723] text-lg">{item.quantityKg}kg {item.cropType}</h3>
-                    
+
                     {item.status === 'LOCKED' ? (
                       <span className="flex items-center gap-1 text-[10px] font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200">
                         <Lock className="w-3 h-3" /> SECURED IN ESCROW
@@ -247,7 +246,7 @@ const FarmerDashboard = () => {
       {/* BUYER OFFERS (BIDS) */}
       <section>
         <h2 className="text-lg font-bold text-[#3E2723] mb-4 flex items-center gap-2">
-            <Banknote className="w-5 h-5 text-[#2E7D32]" /> Incoming Buy Offers
+          <Banknote className="w-5 h-5 text-[#2E7D32]" /> Incoming Buy Offers
         </h2>
         <div className="space-y-4">
           {bids.filter(b => b.status === 'PENDING').length === 0 ? (
@@ -262,8 +261,8 @@ const FarmerDashboard = () => {
                   <h4 className="text-2xl font-bold text-[#3E2723]">{bid.bidAmount.toLocaleString()} RWF</h4>
                   <p className="text-sm text-[#2E7D32] font-bold mt-1">For your {bid.listing?.quantityKg}kg {bid.listing?.cropType}</p>
                 </div>
-                
-                <button 
+
+                <button
                   onClick={() => handleAcceptBid(bid.bidId)}
                   disabled={!!processingId}
                   className="bg-[#2E7D32] text-white px-8 py-4 rounded-2xl font-bold hover:bg-green-800 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-md hover:shadow-lg"
@@ -289,14 +288,14 @@ const FarmerDashboard = () => {
                 <X className="w-4 h-4" />
               </button>
             </div>
-            
+
             <form onSubmit={handleAddListing} className="p-6 space-y-5">
-              
+
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Crop Type</label>
-                <select 
+                <select
                   value={addForm.cropType}
-                  onChange={(e) => setAddForm({...addForm, cropType: e.target.value})}
+                  onChange={(e) => setAddForm({ ...addForm, cropType: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32] bg-white shadow-sm"
                 >
                   <option value="Maize">Maize</option>
@@ -306,16 +305,16 @@ const FarmerDashboard = () => {
                   <option value="Potatoes">Potatoes</option>
                 </select>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Quantity (kg)</label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     required
                     min="1"
                     value={addForm.quantityKg}
-                    onChange={(e) => setAddForm({...addForm, quantityKg: e.target.value})}
+                    onChange={(e) => setAddForm({ ...addForm, quantityKg: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32] shadow-sm"
                     placeholder="e.g. 500"
                   />
@@ -323,12 +322,12 @@ const FarmerDashboard = () => {
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Price / kg (RWF)</label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     required
                     min="1"
                     value={addForm.pricePerKg}
-                    onChange={(e) => setAddForm({...addForm, pricePerKg: e.target.value})}
+                    onChange={(e) => setAddForm({ ...addForm, pricePerKg: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32] shadow-sm"
                     placeholder="e.g. 450"
                   />
@@ -344,8 +343,8 @@ const FarmerDashboard = () => {
               </div>
 
               <div className="pt-2">
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={isCreating}
                   className="w-full py-3.5 bg-[#2E7D32] text-white rounded-xl font-bold hover:bg-green-800 transition-colors shadow-md flex justify-center items-center gap-2 disabled:opacity-50"
                 >

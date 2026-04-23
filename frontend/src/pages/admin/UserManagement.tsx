@@ -32,11 +32,11 @@ const TrustScore = ({ score }: { score: number }) => {
   else if (score < 80) colorClass = "bg-[#FBC02D]"; 
 
   return (
-    <div className="flex items-center gap-3 w-32">
-      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+    <div className="flex items-center gap-2 md:gap-3 w-24 md:w-32">
+      <div className="flex-1 h-1.5 md:h-2 bg-gray-100 rounded-full overflow-hidden">
         <div className={`h-full ${colorClass} rounded-full transition-all duration-500`} style={{ width: `${score}%` }}></div>
       </div>
-      <span className="text-sm font-medium text-gray-600 w-6 text-right">{score}</span>
+      <span className="text-[11px] md:text-sm font-medium text-gray-600 w-5 md:w-6 text-right">{score}</span>
     </div>
   );
 };
@@ -254,69 +254,89 @@ const UserManagement = () => {
     <div className="space-y-6 relative">
       
       {/* FILTER BAR */}
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
+      {/* FILTER BAR - Responsive Refined */}
+      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm space-y-4">
         
-        {/* Left Side: Search & Filters */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full xl:w-auto">
-          <div className="relative w-full sm:w-64">
+        {/* Top Row: Search & Actions */}
+        <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4">
+          
+          {/* Search Box */}
+          <div className="relative flex-1 lg:max-w-sm">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input 
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name, ID, contact..." 
-              className="pl-9 pr-4 py-2 w-full border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32] bg-gray-50 transition-all"
+              placeholder="Search users..." 
+              className="pl-9 pr-4 py-2.5 lg:py-2 w-full border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32] bg-gray-50 transition-all"
             />
           </div>
 
-          <div className="flex items-center gap-3 overflow-x-auto pb-2 sm:pb-0 w-full no-scrollbar">
-            <Filter className="w-4 h-4 text-gray-400 flex-shrink-0" />
-            
-            {/* Role Filters */}
-            <div className="flex items-center gap-1 border-r border-gray-200 pr-3 flex-shrink-0">
-              {['All', 'Farmer', 'Buyer', 'Agent', 'Admin'].map(role => (
-                <button 
-                  key={role}
-                  onClick={() => setRoleFilter(role)}
-                  className={`px-3 py-1.5 rounded-lg text-xs cursor-pointer ${
-                    roleFilter === role ? 'font-bold bg-[#2E7D32] text-white' : 'font-medium text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  {role === 'All' ? 'All Roles' : role}
-                </button>
-              ))}
+          {/* Right Side: Alert Badge & Add User Button */}
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 justify-between sm:justify-end">
+            <div className="flex items-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <Clock className="w-4 h-4 text-yellow-600" />
+              <span className="text-xs font-bold text-yellow-700 whitespace-nowrap">{pendingCount} Pending</span>
             </div>
-
-            {/* Status Filters */}
-            <div className="flex items-center gap-1 pl-1 flex-shrink-0">
-              {['All', 'Verified', 'Pending', 'Rejected'].map(status => (
-                <button 
-                  key={status}
-                  onClick={() => setStatusFilter(status)}
-                  className={`px-3 py-1.5 rounded-lg text-xs cursor-pointer ${
-                    statusFilter === status ? 'font-bold bg-[#3E2723] text-white' : 'font-medium text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  {status === 'All' ? 'All Status' : status}
-                </button>
-              ))}
-            </div>
+            <button 
+              onClick={() => setIsAddModalOpen(true)}
+              className="flex items-center gap-2 bg-[#2E7D32] hover:bg-green-800 text-white px-4 py-2.5 lg:py-2 rounded-lg text-sm font-bold transition-colors shadow-sm flex-1 sm:flex-none justify-center"
+            >
+              <Plus className="w-4 h-4" />
+              Add User
+            </button>
           </div>
         </div>
 
-        {/* Right Side: Alert Badge & Add User Button */}
-        <div className="flex items-center gap-3 flex-shrink-0 w-full xl:w-auto justify-end">
-          <div className="flex items-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <Clock className="w-4 h-4 text-yellow-600" />
-            <span className="text-xs font-bold text-yellow-700">{pendingCount} Pending</span>
+        {/* Bottom Row: Filters Strip */}
+        <div className="flex items-start md:items-center gap-3 bg-gray-50/50 p-2 rounded-lg border border-gray-100 overflow-x-auto no-scrollbar">
+          <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+            
+            {/* Role Filter Group */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-white border border-gray-200 rounded-md shadow-sm">
+                <Filter className="w-3.5 h-3.5 text-gray-400" />
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-1">Role</span>
+              </div>
+              <div className="flex items-center gap-1">
+                {['All', 'Farmer', 'Buyer', 'Agent', 'Admin'].map(role => (
+                  <button 
+                    key={role}
+                    onClick={() => setRoleFilter(role)}
+                    className={`px-3 py-1.5 rounded-lg text-xs transition-all whitespace-nowrap ${
+                      roleFilter === role ? 'font-bold bg-[#2E7D32] text-white shadow-sm' : 'font-medium text-gray-600 hover:bg-white'
+                    }`}
+                  >
+                    {role === 'All' ? 'All Roles' : role}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="hidden md:block h-6 w-px bg-gray-200"></div>
+
+            {/* Status Filter Group */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-white border border-gray-200 rounded-md shadow-sm">
+                <Filter className="w-3.5 h-3.5 text-gray-400" />
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-1">Status</span>
+              </div>
+              <div className="flex items-center gap-1">
+                {['All', 'Verified', 'Pending', 'Rejected'].map(status => (
+                  <button 
+                    key={status}
+                    onClick={() => setStatusFilter(status)}
+                    className={`px-3 py-1.5 rounded-lg text-xs transition-all whitespace-nowrap ${
+                      statusFilter === status ? 'font-bold bg-[#3E2723] text-white shadow-sm' : 'font-medium text-gray-600 hover:bg-white'
+                    }`}
+                  >
+                    {status === 'All' ? 'All Status' : status}
+                  </button>
+                ))}
+              </div>
+            </div>
+
           </div>
-          <button 
-            onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 bg-[#2E7D32] hover:bg-green-800 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            Add User
-          </button>
         </div>
       </div>
 

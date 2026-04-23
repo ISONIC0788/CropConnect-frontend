@@ -231,23 +231,23 @@ const AgentProfile = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Full Name *</label>
-                      <input type="text" required value={editForm.fullName} onChange={e => setEditForm({...editForm, fullName: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400" />
+                      <input type="text" required value={editForm.fullName} onChange={e => setEditForm({ ...editForm, fullName: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400" />
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Phone *</label>
-                      <input type="text" required value={editForm.phoneNumber} onChange={e => setEditForm({...editForm, phoneNumber: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400" />
+                      <input type="text" required value={editForm.phoneNumber} onChange={e => setEditForm({ ...editForm, phoneNumber: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400" />
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Email</label>
-                      <input type="email" value={editForm.email} onChange={e => setEditForm({...editForm, email: e.target.value})} placeholder="agent@example.com" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400" />
+                      <input type="email" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} placeholder="agent@example.com" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400" />
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Coverage Radius (km)</label>
-                      <input type="text" value={editForm.defaultSearchRadius} onChange={e => setEditForm({...editForm, defaultSearchRadius: e.target.value})} placeholder="e.g. 25" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400" />
+                      <input type="text" value={editForm.defaultSearchRadius} onChange={e => setEditForm({ ...editForm, defaultSearchRadius: e.target.value })} placeholder="e.g. 25" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400" />
                     </div>
                     <div className="sm:col-span-2">
                       <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Operating Address</label>
-                      <input type="text" value={editForm.address} onChange={e => setEditForm({...editForm, address: e.target.value})} placeholder="e.g. Nyagatare District, Eastern Province" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400" />
+                      <input type="text" value={editForm.address} onChange={e => setEditForm({ ...editForm, address: e.target.value })} placeholder="e.g. Nyagatare District, Eastern Province" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400" />
                     </div>
                   </div>
                 </div>
@@ -258,11 +258,11 @@ const AgentProfile = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Agency / Organization Name</label>
-                      <input type="text" value={editForm.companyName} onChange={e => setEditForm({...editForm, companyName: e.target.value})} placeholder="e.g. Rwanda Agricultural Board" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400" />
+                      <input type="text" value={editForm.companyName} onChange={e => setEditForm({ ...editForm, companyName: e.target.value })} placeholder="e.g. Rwanda Agricultural Board" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400" />
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Registration Number</label>
-                      <input type="text" value={editForm.registrationNumber} onChange={e => setEditForm({...editForm, registrationNumber: e.target.value})} placeholder="e.g. RAB-2024-001" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400" />
+                      <input type="text" value={editForm.registrationNumber} onChange={e => setEditForm({ ...editForm, registrationNumber: e.target.value })} placeholder="e.g. RAB-2024-001" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400" />
                     </div>
                   </div>
                 </div>

@@ -155,22 +155,22 @@ const AuditLogPage = () => {
         </button>
       </div>
 
-      {/* ── LOG TABLE ─────────────────────────────────────────────────── */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex-1 overflow-hidden flex flex-col">
-        {/* Table header */}
-        <div className="grid grid-cols-[160px_100px_1fr_180px] gap-4 px-6 py-3 bg-gray-50 border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-          <span>Action</span>
+      {/* ── LOG LIST ──────────────────────────────────────────────────── */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex-1 overflow-hidden flex flex-col min-h-[500px]">
+        {/* Header - Desktop only */}
+        <div className="hidden md:grid grid-cols-[180px_100px_1fr_180px] gap-4 px-6 py-3 bg-gray-50 border-b border-gray-100 text-[11px] font-black text-gray-400 uppercase tracking-widest">
+          <span>Action Type</span>
           <span>Entity</span>
-          <span>Details</span>
-          <span>Timestamp</span>
+          <span>Log Details</span>
+          <span className="text-right">Timestamp</span>
         </div>
 
         {/* Scrollable rows */}
-        <div className="overflow-y-auto flex-1">
+        <div className="overflow-y-auto flex-1 no-scrollbar">
           {filtered.length === 0 ? (
-            <div className="text-center py-16 text-gray-400">
-              <ShieldCheck className="w-10 h-10 mx-auto mb-3 opacity-20" />
-              <p className="font-medium">No audit events match your filters.</p>
+            <div className="text-center py-24 text-gray-400">
+              <ShieldCheck className="w-12 h-12 mx-auto mb-4 opacity-10" />
+              <p className="font-medium text-sm">No audit events match your filters.</p>
             </div>
           ) : (
             filtered.map((log, idx) => {
@@ -178,40 +178,54 @@ const AuditLogPage = () => {
               return (
                 <div
                   key={log.logId || idx}
-                  className="grid grid-cols-[160px_100px_1fr_180px] gap-4 px-6 py-4 border-b border-gray-50 hover:bg-gray-50/70 transition-colors items-start"
+                  className="flex flex-col md:grid md:grid-cols-[180px_100px_1fr_180px] gap-3 md:gap-4 px-4 md:px-6 py-4 border-b border-gray-50 hover:bg-gray-50/70 transition-colors animate-in fade-in slide-in-from-bottom-1"
                 >
-                  {/* Action badge */}
-                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border w-fit ${meta.bg} ${meta.color} ${meta.border}`}>
-                    {meta.icon}
-                    <span className="truncate max-w-[110px]">{log.actionType}</span>
+                  {/* Action Badge & Timestamp (Mobile) */}
+                  <div className="flex justify-between items-center md:block">
+                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black border uppercase tracking-tight ${meta.bg} ${meta.color} ${meta.border}`}>
+                      {meta.icon}
+                      <span className="truncate max-w-[120px]">{log.actionType}</span>
+                    </div>
+                    <div className="md:hidden text-right">
+                      <p className="text-[10px] font-bold text-gray-500">
+                        {new Date(log.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
 
                   {/* Entity type */}
-                  <div>
-                    <span className="text-xs font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded">
-                      {log.entityType || '—'}
+                  <div className="flex items-center gap-2 md:block">
+                    <span className="text-[10px] font-black text-gray-400 uppercase md:hidden">Entity:</span>
+                    <span className="text-[10px] font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
+                      {log.entityType || 'SYSTEM'}
                     </span>
-                    <p className="text-[10px] text-gray-400 mt-1 font-mono truncate" title={log.entityId}>
+                    <p className="hidden md:block text-[10px] text-gray-400 mt-1 font-mono opacity-60">
                       #{log.entityId?.substring(0, 8)}
                     </p>
                   </div>
 
                   {/* Details */}
-                  <p className="text-sm text-gray-700 leading-relaxed font-mono text-xs">
-                    {log.details || '—'}
-                  </p>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-black text-gray-400 uppercase md:hidden">Details:</span>
+                    <p className="text-xs text-gray-600 leading-relaxed font-medium bg-gray-50 p-2 rounded-lg border border-gray-100 md:bg-transparent md:p-0 md:border-0 md:text-sm">
+                      {log.details || 'No additional details provided.'}
+                    </p>
+                    {log.entityId && (
+                       <p className="md:hidden text-[9px] text-gray-400 font-mono">ID: {log.entityId}</p>
+                    )}
+                  </div>
 
-                  {/* Timestamp */}
-                  <div className="text-right">
-                    <p className="text-xs font-semibold text-gray-700">
+                  {/* Timestamp (Desktop) */}
+                  <div className="hidden md:flex flex-col items-end text-right">
+                    <p className="text-xs font-bold text-gray-800">
                       {new Date(log.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </p>
-                    <p className="text-[11px] text-gray-400 mt-0.5">
-                      {new Date(log.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                    <p className="text-[10px] text-gray-400 mt-0.5">
+                      {new Date(log.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                     </p>
-                    <div className="flex items-center justify-end gap-1 mt-1">
+                    <div className="flex items-center justify-end gap-1 mt-1 opacity-40">
                       <CheckCircle2 className="w-3 h-3 text-[#166534]" />
-                      <span className="text-[10px] text-gray-400">Immutable</span>
+                      <span className="text-[8px] font-black uppercase tracking-tighter">Verified</span>
                     </div>
                   </div>
                 </div>
@@ -220,10 +234,14 @@ const AuditLogPage = () => {
           )}
         </div>
 
-        {/* Footer count */}
-        <div className="px-6 py-3 border-t border-gray-100 bg-gray-50 text-xs text-gray-400 font-medium flex justify-between">
-          <span>Showing <strong className="text-gray-600">{filtered.length}</strong> of <strong className="text-gray-600">{logs.length}</strong> events</span>
-          <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-[#166534]" /> Write-protected · Spring AOP</span>
+        {/* Footer */}
+        <div className="px-4 md:px-6 py-3 border-t border-gray-100 bg-gray-50 text-[10px] text-gray-400 font-bold flex flex-col md:flex-row justify-between gap-2">
+          <span>SHOWING <strong className="text-gray-700">{filtered.length}</strong> OF <strong className="text-gray-700">{logs.length}</strong> AUDIT EVENTS</span>
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-[#166534]" /> SECURE LOGS</span>
+            <span className="hidden md:inline text-gray-300">|</span>
+            <span className="flex items-center gap-1 uppercase tracking-widest"><CheckCircle2 className="w-3 h-3 text-blue-500" /> IMMUTABLE TRAIL</span>
+          </div>
         </div>
       </div>
 
