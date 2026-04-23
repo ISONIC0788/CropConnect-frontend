@@ -278,8 +278,8 @@ const FarmerDashboard = () => {
 
       {/* ADD LISTING MODAL */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-[#3E2723]/30 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 w-full max-w-md overflow-hidden animate-in zoom-in-95">
+        <div className="fixed inset-0 bg-[#3E2723]/30 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-in fade-in" onClick={() => setIsAddModalOpen(false)}>
+          <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 w-full max-w-md overflow-hidden animate-in zoom-in-95" onClick={(e) => e.stopPropagation()}>
             <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
               <h3 className="font-bold text-[#3E2723] text-lg flex items-center gap-2">
                 <Sprout className="w-5 h-5 text-[#2E7D32]" /> Add New Harvest

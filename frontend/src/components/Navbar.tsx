@@ -49,7 +49,7 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-24">
           
-          <div className="flex-shrink-0 flex items-center gap-3 cursor-pointer">
+          <Link to="/" className="shrink-0 flex items-center gap-3 cursor-pointer" aria-label="Go to home">
             <img 
               src="/crop_connect_log.png" 
               alt="CropConnect Logo" 
@@ -58,7 +58,7 @@ const Navbar = () => {
             <span className="font-serif font-bold text-2xl tracking-wide hidden sm:block drop-shadow-md">
               CropConnect
             </span>
-          </div>
+          </Link>
 
           <div className="hidden md:flex space-x-8 items-center">
             {navLinks.map((link) => (
@@ -74,7 +74,7 @@ const Navbar = () => {
               Log In
             </Link>
             <Link to="/signup">
-              <button className="bg-accent hover:bg-yellow-500 text-[#3E2723] px-6 py-2.5 rounded-lg font-semibold transition-colors cursor-pointer shadow-lg">
+              <button className="bg-accent hover:bg-yellow-500 text-brown px-6 py-2.5 rounded-lg font-semibold transition-colors cursor-pointer shadow-lg">
                 Get Started
               </button>
             </Link>
@@ -92,7 +92,7 @@ const Navbar = () => {
       </div>
 
       {isOpen && (
-        <div className="md:hidden bg-primary shadow-xl pb-6 pt-2 px-4 border-t border-green-800 absolute w-full left-0 top-[100%]">
+        <div className="md:hidden bg-primary shadow-xl pb-6 pt-2 px-4 border-t border-green-800 absolute w-full left-0 top-full">
           <div className="flex flex-col space-y-4 pt-2">
             {navLinks.map((link) => (
               <a
@@ -108,7 +108,7 @@ const Navbar = () => {
               Log In
             </Link>
             <Link to="/signup" onClick={() => setIsOpen(false)}>
-              <button className="w-full bg-accent hover:bg-yellow-500 text-[#3E2723] px-5 py-3 rounded-lg font-semibold transition-colors mt-2 shadow-sm cursor-pointer">
+              <button className="w-full bg-accent hover:bg-yellow-500 text-brown px-5 py-3 rounded-lg font-semibold transition-colors mt-2 shadow-sm cursor-pointer">
                 Get Started
               </button>
             </Link>

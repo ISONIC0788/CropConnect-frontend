@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Clock, CheckCircle2, XCircle, Trash2, Edit2, Loader2, X, Plus, Eye, EyeOff, User, Phone, Mail, MapPin, Shield, Calendar, BadgeCheck } from 'lucide-react';
+import { Search, Filter, Clock, CheckCircle2, XCircle, Trash2, Edit2, Loader2, X, Plus, Eye, User, Phone, Mail, MapPin, Shield, Calendar, BadgeCheck } from 'lucide-react';
 import axiosClient from '../../api/axiosClient';
 import { toast } from 'sonner';
 
@@ -64,8 +64,7 @@ const UserManagement = () => {
   // Add Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [addForm, setAddForm] = useState({ fullName: '', phoneNumber: '', password: '', role: 'FARMER' });
-  const [showAddPassword, setShowAddPassword] = useState(false);
+  const [addForm, setAddForm] = useState({ fullName: '', phoneNumber: '', email: '', role: 'BUYER' });
 
   // Filters State
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,6 +81,7 @@ const UserManagement = () => {
       const response = await axiosClient.get('/users');
       
       const mappedUsers = response.data.map((u: any) => {
+        const isVerified = Boolean(u.isVerified ?? u.verified);
         let displayDistrict = 'Rwanda';
         if (typeof u.location === 'string') {
             displayDistrict = u.location;
@@ -98,8 +98,8 @@ const UserManagement = () => {
             email: u.email || '',
             role: u.role ? u.role.toUpperCase() : 'UNKNOWN',
             displayRole: u.role ? u.role.charAt(0) + u.role.slice(1).toLowerCase() : 'Unknown',
-            status: u.isVerified ? 'Verified' : 'Pending',
-            trustScore: u.trustScore || (u.isVerified ? 85 : 42),
+            status: isVerified ? 'Verified' : 'Pending',
+            trustScore: u.trustScore || (isVerified ? 85 : 42),
             district: displayDistrict,
             companyName: u.companyName || null,
             registrationNumber: u.registrationNumber || null,
@@ -127,20 +127,22 @@ const UserManagement = () => {
     try {
       setIsCreating(true);
       await axiosClient.post('/users/register', {
-        fullName: addForm.fullName,
-        phoneNumber: addForm.phoneNumber,
-        passwordHash: addForm.password, // Backend hashes this
-        role: addForm.role
+        fullName: addForm.fullName.trim(),
+        phoneNumber: addForm.phoneNumber.trim(),
+        email: addForm.email.trim(),
+        role: addForm.role,
+        passwordHash: ''
       });
       
       // Refresh the table to get the new user with their assigned ID
       await fetchUsers();
       
       setIsAddModalOpen(false);
-      setAddForm({ fullName: '', phoneNumber: '', password: '', role: 'FARMER' });
+      setAddForm({ fullName: '', phoneNumber: '', email: '', role: 'BUYER' });
+      toast.success('User created. Login details were sent to the email address.');
     } catch (error) {
       console.error("Failed to create user:", error);
-      toast.error('Phone number already exists or invalid data.');
+      toast.error('Phone number, email already exists, or data is invalid.');
     } finally {
       setIsCreating(false);
     }
@@ -150,7 +152,8 @@ const UserManagement = () => {
     try {
       setIsVerifying(userId);
       await axiosClient.put(`/users/${userId}/verify`);
-      setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: 'Verified', trustScore: 85 } : u));
+      await fetchUsers();
+      toast.success('User verified and saved to database.');
     } catch (error) {
       console.error("Failed to verify user:", error);
       toast.error('Failed to verify user.');
@@ -408,9 +411,10 @@ const UserManagement = () => {
                           onClick={() => handleVerifyUser(user.id)}
                           disabled={isVerifying === user.id}
                           title="Verify User"
-                          className="p-1.5 bg-green-100 hover:bg-green-200 text-green-800 rounded-lg transition-colors flex items-center justify-center disabled:opacity-50"
+                          className="px-2.5 py-1.5 bg-green-100 hover:bg-green-200 text-green-800 rounded-lg transition-colors flex items-center justify-center gap-1.5 text-xs font-bold disabled:opacity-50"
                         >
                           {isVerifying === user.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                          <span>Verify</span>
                         </button>
                       )}
                       
@@ -441,8 +445,8 @@ const UserManagement = () => {
 
       {/* ADD NEW USER MODAL */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-[#3E2723]/30 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 w-full max-w-md overflow-hidden animate-in zoom-in-95">
+        <div className="fixed inset-0 bg-[#3E2723]/30 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-in fade-in" onClick={() => setIsAddModalOpen(false)}>
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 w-full max-w-md overflow-hidden animate-in zoom-in-95" onClick={(e) => e.stopPropagation()}>
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
               <h3 className="font-bold text-[#3E2723] text-lg">Add New User</h3>
               <button onClick={() => setIsAddModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
@@ -476,24 +480,15 @@ const UserManagement = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Temporary Password</label>
-                <div className="relative">
-                  <input 
-                    type={showAddPassword ? "text" : "password"} 
-                    required
-                    value={addForm.password}
-                    onChange={(e) => setAddForm({...addForm, password: e.target.value})}
-                    className="w-full px-4 py-2 pr-10 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]"
-                    placeholder="Enter initial password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowAddPassword(!showAddPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showAddPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Email Address</label>
+                <input 
+                  type="email" 
+                  required
+                  value={addForm.email}
+                  onChange={(e) => setAddForm({...addForm, email: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]"
+                  placeholder="e.g. user@example.com"
+                />
               </div>
 
               <div>
@@ -503,10 +498,8 @@ const UserManagement = () => {
                   onChange={(e) => setAddForm({...addForm, role: e.target.value})}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32] bg-white"
                 >
-                  <option value="FARMER">Farmer</option>
                   <option value="BUYER">Buyer</option>
                   <option value="AGENT">Agent</option>
-                  <option value="ADMIN">Admin</option>
                 </select>
               </div>
 
@@ -534,8 +527,8 @@ const UserManagement = () => {
 
       {/* EDIT USER MODAL */}
       {editingUser && (
-        <div className="fixed inset-0 bg-[#3E2723]/30 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 w-full max-w-2xl overflow-hidden animate-in zoom-in-95">
+        <div className="fixed inset-0 bg-[#3E2723]/30 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-in fade-in" onClick={() => setEditingUser(null)}>
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 w-full max-w-2xl overflow-hidden animate-in zoom-in-95" onClick={(e) => e.stopPropagation()}>
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
               <div>
                 <h3 className="font-bold text-[#3E2723] text-lg">Edit User Profile</h3>
@@ -736,8 +729,8 @@ const UserManagement = () => {
 
       {/* VIEW USER PROFILE MODAL */}
       {viewingUser && (
-        <div className="fixed inset-0 bg-[#3E2723]/40 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-lg overflow-hidden animate-in zoom-in-95">
+        <div className="fixed inset-0 bg-[#3E2723]/40 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-in fade-in" onClick={() => setViewingUser(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-lg overflow-hidden animate-in zoom-in-95" onClick={(e) => e.stopPropagation()}>
             
             {/* Modal Header with Avatar */}
             <div className="bg-gradient-to-br from-[#2E7D32] to-[#1B5E20] px-6 py-6 relative overflow-hidden">

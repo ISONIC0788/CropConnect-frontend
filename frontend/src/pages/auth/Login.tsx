@@ -68,7 +68,7 @@ const Login = () => {
       
       {/* HEADER */}
       <div className="mb-8">
-        <h2 className="text-2xl sm:text-3xl font-bold text-[#3E2723] mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
+        <h2 className="text-2xl sm:text-3xl font-bold text-brown mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
           Welcome back
         </h2>
         <p className="text-sm text-gray-500">Please enter your details to sign in.</p>
@@ -80,7 +80,7 @@ const Login = () => {
           type="button"
           onClick={() => setActiveTab('password')}
           className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
-            activeTab === 'password' ? 'bg-white text-[#3E2723] shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            activeTab === 'password' ? 'bg-white text-brown shadow-sm' : 'text-gray-500 hover:text-gray-700'
           }`}
         >
           <Lock className="w-4 h-4" /> Password
@@ -89,7 +89,7 @@ const Login = () => {
           type="button"
           onClick={() => { setActiveTab('otp'); setOtpSent(false); }}
           className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
-            activeTab === 'otp' ? 'bg-white text-[#3E2723] shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            activeTab === 'otp' ? 'bg-white text-brown shadow-sm' : 'text-gray-500 hover:text-gray-700'
           }`}
         >
           <Phone className="w-4 h-4" /> OTP
@@ -115,12 +115,12 @@ const Login = () => {
                 required
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                className="peer w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl text-sm text-[#3E2723] placeholder-transparent focus:border-[#2E7D32] focus:ring-0 focus:outline-none transition-colors bg-white" 
+                className="peer w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl text-sm text-brown placeholder-transparent focus:border-primary focus:ring-0 focus:outline-none transition-colors bg-white" 
                 placeholder="Phone Number" 
               />
               <label 
                 htmlFor="phoneNumber" 
-                className="absolute left-4 top-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-4 peer-placeholder-shown:normal-case peer-placeholder-shown:font-medium peer-focus:top-2 peer-focus:text-[11px] peer-focus:uppercase peer-focus:font-bold peer-focus:text-[#2E7D32]"
+                className="absolute left-4 top-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-4 peer-placeholder-shown:normal-case peer-placeholder-shown:font-medium peer-focus:top-2 peer-focus:text-[11px] peer-focus:uppercase peer-focus:font-bold peer-focus:text-primary"
               >
                 Phone Number
               </label>
@@ -133,19 +133,19 @@ const Login = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="peer w-full px-4 pt-6 pb-2 pr-12 border-2 border-gray-200 rounded-xl text-sm text-[#3E2723] placeholder-transparent focus:border-[#2E7D32] focus:ring-0 focus:outline-none transition-colors bg-white" 
+                className="peer w-full px-4 pt-6 pb-2 pr-12 border-2 border-gray-200 rounded-xl text-sm text-brown placeholder-transparent focus:border-primary focus:ring-0 focus:outline-none transition-colors bg-white" 
                 placeholder="Password" 
               />
               <label 
                 htmlFor="password" 
-                className="absolute left-4 top-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-4 peer-placeholder-shown:normal-case peer-placeholder-shown:font-medium peer-focus:top-2 peer-focus:text-[11px] peer-focus:uppercase peer-focus:font-bold peer-focus:text-[#2E7D32]"
+                className="absolute left-4 top-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-4 peer-placeholder-shown:normal-case peer-placeholder-shown:font-medium peer-focus:top-2 peer-focus:text-[11px] peer-focus:uppercase peer-focus:font-bold peer-focus:text-primary"
               >
                 Password
               </label>
               <button 
                 type="button" 
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#2E7D32] transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors"
                 tabIndex={-1}
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -166,12 +166,12 @@ const Login = () => {
                   type="tel" 
                   id="otpPhone" 
                   disabled={otpSent}
-                  className="peer w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl text-sm text-[#3E2723] placeholder-transparent focus:border-[#2E7D32] focus:ring-0 focus:outline-none transition-colors bg-white disabled:bg-gray-50 disabled:text-gray-400" 
+                  className="peer w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl text-sm text-brown placeholder-transparent focus:border-primary focus:ring-0 focus:outline-none transition-colors bg-white disabled:bg-gray-50 disabled:text-gray-400" 
                   placeholder="Phone Number" 
                 />
                 <label 
                   htmlFor="otpPhone" 
-                  className="absolute left-4 top-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-4 peer-placeholder-shown:normal-case peer-placeholder-shown:font-medium peer-focus:top-2 peer-focus:text-[11px] peer-focus:uppercase peer-focus:font-bold peer-focus:text-[#2E7D32]"
+                  className="absolute left-4 top-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-4 peer-placeholder-shown:normal-case peer-placeholder-shown:font-medium peer-focus:top-2 peer-focus:text-[11px] peer-focus:uppercase peer-focus:font-bold peer-focus:text-primary"
                 >
                   Phone Number
                 </label>
@@ -182,7 +182,7 @@ const Login = () => {
               <button 
                 type="button" 
                 onClick={() => setOtpSent(true)}
-                className="w-full py-4 rounded-xl text-sm font-bold text-[#2E7D32] bg-green-50 border border-green-200 hover:bg-green-100 transition-colors flex items-center justify-center gap-2"
+                className="w-full py-4 rounded-xl text-sm font-bold text-primary bg-green-50 border border-green-200 hover:bg-green-100 transition-colors flex items-center justify-center gap-2"
               >
                 Send OTP Code <ArrowRight className="w-4 h-4" />
               </button>
@@ -192,12 +192,12 @@ const Login = () => {
                   type="text" 
                   id="otpCode" 
                   maxLength={6}
-                  className="peer w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl text-center tracking-[0.5em] text-lg font-bold text-[#3E2723] placeholder-transparent focus:border-[#FBC02D] focus:ring-0 focus:outline-none transition-colors bg-white" 
+                  className="peer w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl text-center tracking-[0.5em] text-lg font-bold text-brown placeholder-transparent focus:border-accent focus:ring-0 focus:outline-none transition-colors bg-white" 
                   placeholder="000000" 
                 />
                 <label 
                   htmlFor="otpCode" 
-                  className="absolute left-4 top-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-4 peer-placeholder-shown:normal-case peer-placeholder-shown:font-medium peer-focus:top-2 peer-focus:text-[11px] peer-focus:uppercase peer-focus:font-bold peer-focus:text-[#FBC02D]"
+                  className="absolute left-4 top-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-4 peer-placeholder-shown:normal-case peer-placeholder-shown:font-medium peer-focus:top-2 peer-focus:text-[11px] peer-focus:uppercase peer-focus:font-bold peer-focus:text-accent"
                 >
                   6-Digit OTP Code
                 </label>
@@ -212,13 +212,13 @@ const Login = () => {
         {/* UTILITIES */}
         <div className="flex items-center justify-between pt-2">
           <label className="flex items-center gap-2 cursor-pointer group">
-            <div className="w-4 h-4 rounded border-2 border-gray-300 flex items-center justify-center group-hover:border-[#2E7D32] transition-colors">
+            <div className="w-4 h-4 rounded border-2 border-gray-300 flex items-center justify-center group-hover:border-primary transition-colors">
               <input type="checkbox" className="opacity-0 absolute w-0 h-0 peer" />
-              <svg className="w-3 h-3 text-white peer-checked:text-[#2E7D32] opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+              <svg className="w-3 h-3 text-white peer-checked:text-primary opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
             </div>
             <span className="text-sm font-medium text-gray-600">Remember me</span>
           </label>
-          <a href="#" className="text-sm font-bold text-[#2E7D32] hover:text-green-800 transition-colors">
+          <a href="#" className="text-sm font-bold text-primary hover:text-green-800 transition-colors">
             Forgot password?
           </a>
         </div>
@@ -230,7 +230,7 @@ const Login = () => {
           className={`w-full py-4 mt-4 rounded-xl text-white font-bold text-base shadow-md transition-all flex items-center justify-center gap-2 ${
             loading 
               ? 'bg-green-400 cursor-not-allowed' 
-              : 'bg-[#2E7D32] hover:bg-green-800 hover:shadow-lg hover:-translate-y-0.5'
+              : 'bg-primary hover:bg-green-800 hover:shadow-lg hover:-translate-y-0.5'
           }`}
         >
           {loading ? (
@@ -246,7 +246,7 @@ const Login = () => {
       {/* FOOTER */}
       <p className="text-center text-sm font-medium text-gray-500 mt-8">
         Don't have an account?{' '}
-        <Link to="/signup" className="font-bold text-[#2E7D32] hover:underline">
+        <Link to="/signup" className="font-bold text-primary hover:underline">
           Sign up
         </Link>
       </p>
