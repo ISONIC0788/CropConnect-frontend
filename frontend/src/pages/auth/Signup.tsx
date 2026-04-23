@@ -35,16 +35,29 @@ const Signup = () => {
   };
   const strength = getPasswordStrength();
 
+  const isValidEmail = (value: string) => {
+    const normalized = value.trim();
+    return /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(normalized);
+  };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if ((role === 'buyer' || role === 'agent') && !isValidEmail(email)) {
+      setError('Please enter a valid email for Buyer or Agent sign up.');
+      return;
+    }
+
     setLoading(true);
 
     try {
       // 1. Prepare data to match your Spring Boot User.java exactly
       const userData = {
-        fullName: fullName,
-        phoneNumber: phoneNumber,
+        fullName: fullName.trim(),
+        phoneNumber: phoneNumber.trim(),
+        email: email.trim(),
+        companyName: role === 'buyer' ? company.trim() || null : null,
         passwordHash: password, // Using raw password here; ensure backend hashes it!
         role: role === 'buyer' ? 'BUYER' : role === 'agent' ? 'AGENT' : 'ADMIN' // Use standard uppercase roles
       };
@@ -58,7 +71,11 @@ const Signup = () => {
 
     } catch (err: any) {
       console.error(err);
-      setError(err.response?.data?.message || 'Failed to create account. Phone number might already be in use.');
+      const backendMessage =
+        typeof err?.response?.data === 'string'
+          ? err.response.data
+          : err?.response?.data?.message;
+      setError(backendMessage || 'Failed to create account. Check phone/email and try again.');
     } finally {
       setLoading(false);
     }
@@ -156,6 +173,7 @@ const Signup = () => {
             <input 
               type="email" 
               id="signup-email" 
+              required={role === 'buyer' || role === 'agent'}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="peer w-full px-4 pt-6 pb-2 border-2 border-gray-200 rounded-xl text-sm text-[#3E2723] placeholder-transparent focus:border-[#2E7D32] focus:ring-0 focus:outline-none transition-colors bg-white" 
