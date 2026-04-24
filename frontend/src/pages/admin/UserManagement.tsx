@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Clock, CheckCircle2, XCircle, Trash2, Edit2, Loader2, X, Plus, Eye, EyeOff, User, Phone, Mail, MapPin, Shield, Calendar, BadgeCheck } from 'lucide-react';
+import { Search, Filter, Clock, CheckCircle2, XCircle, Trash2, Edit2, Loader2, X, Plus, Eye, User, Phone, Mail, MapPin, Shield, Calendar, BadgeCheck } from 'lucide-react';
 import axiosClient from '../../api/axiosClient';
 import { toast } from 'sonner';
 
@@ -32,11 +32,11 @@ const TrustScore = ({ score }: { score: number }) => {
   else if (score < 80) colorClass = "bg-[#FBC02D]"; 
 
   return (
-    <div className="flex items-center gap-3 w-32">
-      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+    <div className="flex items-center gap-2 md:gap-3 w-24 md:w-32">
+      <div className="flex-1 h-1.5 md:h-2 bg-gray-100 rounded-full overflow-hidden">
         <div className={`h-full ${colorClass} rounded-full transition-all duration-500`} style={{ width: `${score}%` }}></div>
       </div>
-      <span className="text-sm font-medium text-gray-600 w-6 text-right">{score}</span>
+      <span className="text-[11px] md:text-sm font-medium text-gray-600 w-5 md:w-6 text-right">{score}</span>
     </div>
   );
 };
@@ -64,8 +64,7 @@ const UserManagement = () => {
   // Add Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [addForm, setAddForm] = useState({ fullName: '', phoneNumber: '', password: '', role: 'FARMER' });
-  const [showAddPassword, setShowAddPassword] = useState(false);
+  const [addForm, setAddForm] = useState({ fullName: '', phoneNumber: '', email: '', role: 'BUYER' });
 
   // Filters State
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,6 +81,7 @@ const UserManagement = () => {
       const response = await axiosClient.get('/users');
       
       const mappedUsers = response.data.map((u: any) => {
+        const isVerified = Boolean(u.isVerified ?? u.verified);
         let displayDistrict = 'Rwanda';
         if (typeof u.location === 'string') {
             displayDistrict = u.location;
@@ -98,8 +98,8 @@ const UserManagement = () => {
             email: u.email || '',
             role: u.role ? u.role.toUpperCase() : 'UNKNOWN',
             displayRole: u.role ? u.role.charAt(0) + u.role.slice(1).toLowerCase() : 'Unknown',
-            status: u.isVerified ? 'Verified' : 'Pending',
-            trustScore: u.trustScore || (u.isVerified ? 85 : 42),
+            status: isVerified ? 'Verified' : 'Pending',
+            trustScore: u.trustScore || (isVerified ? 85 : 42),
             district: displayDistrict,
             companyName: u.companyName || null,
             registrationNumber: u.registrationNumber || null,
@@ -127,20 +127,22 @@ const UserManagement = () => {
     try {
       setIsCreating(true);
       await axiosClient.post('/users/register', {
-        fullName: addForm.fullName,
-        phoneNumber: addForm.phoneNumber,
-        passwordHash: addForm.password, // Backend hashes this
-        role: addForm.role
+        fullName: addForm.fullName.trim(),
+        phoneNumber: addForm.phoneNumber.trim(),
+        email: addForm.email.trim(),
+        role: addForm.role,
+        passwordHash: ''
       });
       
       // Refresh the table to get the new user with their assigned ID
       await fetchUsers();
       
       setIsAddModalOpen(false);
-      setAddForm({ fullName: '', phoneNumber: '', password: '', role: 'FARMER' });
+      setAddForm({ fullName: '', phoneNumber: '', email: '', role: 'BUYER' });
+      toast.success('User created. Login details were sent to the email address.');
     } catch (error) {
       console.error("Failed to create user:", error);
-      toast.error('Phone number already exists or invalid data.');
+      toast.error('Phone number, email already exists, or data is invalid.');
     } finally {
       setIsCreating(false);
     }
@@ -150,7 +152,8 @@ const UserManagement = () => {
     try {
       setIsVerifying(userId);
       await axiosClient.put(`/users/${userId}/verify`);
-      setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: 'Verified', trustScore: 85 } : u));
+      await fetchUsers();
+      toast.success('User verified and saved to database.');
     } catch (error) {
       console.error("Failed to verify user:", error);
       toast.error('Failed to verify user.');
@@ -254,69 +257,89 @@ const UserManagement = () => {
     <div className="space-y-6 relative">
       
       {/* FILTER BAR */}
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
+      {/* FILTER BAR - Responsive Refined */}
+      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm space-y-4">
         
-        {/* Left Side: Search & Filters */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full xl:w-auto">
-          <div className="relative w-full sm:w-64">
+        {/* Top Row: Search & Actions */}
+        <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4">
+          
+          {/* Search Box */}
+          <div className="relative flex-1 lg:max-w-sm">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input 
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name, ID, contact..." 
-              className="pl-9 pr-4 py-2 w-full border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32] bg-gray-50 transition-all"
+              placeholder="Search users..." 
+              className="pl-9 pr-4 py-2.5 lg:py-2 w-full border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32] bg-gray-50 transition-all"
             />
           </div>
 
-          <div className="flex items-center gap-3 overflow-x-auto pb-2 sm:pb-0 w-full no-scrollbar">
-            <Filter className="w-4 h-4 text-gray-400 flex-shrink-0" />
-            
-            {/* Role Filters */}
-            <div className="flex items-center gap-1 border-r border-gray-200 pr-3 flex-shrink-0">
-              {['All', 'Farmer', 'Buyer', 'Agent', 'Admin'].map(role => (
-                <button 
-                  key={role}
-                  onClick={() => setRoleFilter(role)}
-                  className={`px-3 py-1.5 rounded-lg text-xs cursor-pointer ${
-                    roleFilter === role ? 'font-bold bg-[#2E7D32] text-white' : 'font-medium text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  {role === 'All' ? 'All Roles' : role}
-                </button>
-              ))}
+          {/* Right Side: Alert Badge & Add User Button */}
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 justify-between sm:justify-end">
+            <div className="flex items-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <Clock className="w-4 h-4 text-yellow-600" />
+              <span className="text-xs font-bold text-yellow-700 whitespace-nowrap">{pendingCount} Pending</span>
             </div>
-
-            {/* Status Filters */}
-            <div className="flex items-center gap-1 pl-1 flex-shrink-0">
-              {['All', 'Verified', 'Pending', 'Rejected'].map(status => (
-                <button 
-                  key={status}
-                  onClick={() => setStatusFilter(status)}
-                  className={`px-3 py-1.5 rounded-lg text-xs cursor-pointer ${
-                    statusFilter === status ? 'font-bold bg-[#3E2723] text-white' : 'font-medium text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  {status === 'All' ? 'All Status' : status}
-                </button>
-              ))}
-            </div>
+            <button 
+              onClick={() => setIsAddModalOpen(true)}
+              className="flex items-center gap-2 bg-[#2E7D32] hover:bg-green-800 text-white px-4 py-2.5 lg:py-2 rounded-lg text-sm font-bold transition-colors shadow-sm flex-1 sm:flex-none justify-center"
+            >
+              <Plus className="w-4 h-4" />
+              Add User
+            </button>
           </div>
         </div>
 
-        {/* Right Side: Alert Badge & Add User Button */}
-        <div className="flex items-center gap-3 flex-shrink-0 w-full xl:w-auto justify-end">
-          <div className="flex items-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <Clock className="w-4 h-4 text-yellow-600" />
-            <span className="text-xs font-bold text-yellow-700">{pendingCount} Pending</span>
+        {/* Bottom Row: Filters Strip */}
+        <div className="flex items-start md:items-center gap-3 bg-gray-50/50 p-2 rounded-lg border border-gray-100 overflow-x-auto no-scrollbar">
+          <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+            
+            {/* Role Filter Group */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-white border border-gray-200 rounded-md shadow-sm">
+                <Filter className="w-3.5 h-3.5 text-gray-400" />
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-1">Role</span>
+              </div>
+              <div className="flex items-center gap-1">
+                {['All', 'Farmer', 'Buyer', 'Agent', 'Admin'].map(role => (
+                  <button 
+                    key={role}
+                    onClick={() => setRoleFilter(role)}
+                    className={`px-3 py-1.5 rounded-lg text-xs transition-all whitespace-nowrap ${
+                      roleFilter === role ? 'font-bold bg-[#2E7D32] text-white shadow-sm' : 'font-medium text-gray-600 hover:bg-white'
+                    }`}
+                  >
+                    {role === 'All' ? 'All Roles' : role}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="hidden md:block h-6 w-px bg-gray-200"></div>
+
+            {/* Status Filter Group */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-white border border-gray-200 rounded-md shadow-sm">
+                <Filter className="w-3.5 h-3.5 text-gray-400" />
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-1">Status</span>
+              </div>
+              <div className="flex items-center gap-1">
+                {['All', 'Verified', 'Pending', 'Rejected'].map(status => (
+                  <button 
+                    key={status}
+                    onClick={() => setStatusFilter(status)}
+                    className={`px-3 py-1.5 rounded-lg text-xs transition-all whitespace-nowrap ${
+                      statusFilter === status ? 'font-bold bg-[#3E2723] text-white shadow-sm' : 'font-medium text-gray-600 hover:bg-white'
+                    }`}
+                  >
+                    {status === 'All' ? 'All Status' : status}
+                  </button>
+                ))}
+              </div>
+            </div>
+
           </div>
-          <button 
-            onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 bg-[#2E7D32] hover:bg-green-800 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            Add User
-          </button>
         </div>
       </div>
 
@@ -388,9 +411,10 @@ const UserManagement = () => {
                           onClick={() => handleVerifyUser(user.id)}
                           disabled={isVerifying === user.id}
                           title="Verify User"
-                          className="p-1.5 bg-green-100 hover:bg-green-200 text-green-800 rounded-lg transition-colors flex items-center justify-center disabled:opacity-50"
+                          className="px-2.5 py-1.5 bg-green-100 hover:bg-green-200 text-green-800 rounded-lg transition-colors flex items-center justify-center gap-1.5 text-xs font-bold disabled:opacity-50"
                         >
                           {isVerifying === user.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                          <span>Verify</span>
                         </button>
                       )}
                       
@@ -421,8 +445,8 @@ const UserManagement = () => {
 
       {/* ADD NEW USER MODAL */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-[#3E2723]/30 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 w-full max-w-md overflow-hidden animate-in zoom-in-95">
+        <div className="fixed inset-0 bg-[#3E2723]/30 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-in fade-in" onClick={() => setIsAddModalOpen(false)}>
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 w-full max-w-md overflow-hidden animate-in zoom-in-95" onClick={(e) => e.stopPropagation()}>
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
               <h3 className="font-bold text-[#3E2723] text-lg">Add New User</h3>
               <button onClick={() => setIsAddModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
@@ -456,24 +480,15 @@ const UserManagement = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Temporary Password</label>
-                <div className="relative">
-                  <input 
-                    type={showAddPassword ? "text" : "password"} 
-                    required
-                    value={addForm.password}
-                    onChange={(e) => setAddForm({...addForm, password: e.target.value})}
-                    className="w-full px-4 py-2 pr-10 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]"
-                    placeholder="Enter initial password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowAddPassword(!showAddPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showAddPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Email Address</label>
+                <input 
+                  type="email" 
+                  required
+                  value={addForm.email}
+                  onChange={(e) => setAddForm({...addForm, email: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]"
+                  placeholder="e.g. user@example.com"
+                />
               </div>
 
               <div>
@@ -483,10 +498,8 @@ const UserManagement = () => {
                   onChange={(e) => setAddForm({...addForm, role: e.target.value})}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32] bg-white"
                 >
-                  <option value="FARMER">Farmer</option>
                   <option value="BUYER">Buyer</option>
                   <option value="AGENT">Agent</option>
-                  <option value="ADMIN">Admin</option>
                 </select>
               </div>
 
@@ -514,8 +527,8 @@ const UserManagement = () => {
 
       {/* EDIT USER MODAL */}
       {editingUser && (
-        <div className="fixed inset-0 bg-[#3E2723]/30 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 w-full max-w-2xl overflow-hidden animate-in zoom-in-95">
+        <div className="fixed inset-0 bg-[#3E2723]/30 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-in fade-in" onClick={() => setEditingUser(null)}>
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 w-full max-w-2xl overflow-hidden animate-in zoom-in-95" onClick={(e) => e.stopPropagation()}>
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
               <div>
                 <h3 className="font-bold text-[#3E2723] text-lg">Edit User Profile</h3>
@@ -716,8 +729,8 @@ const UserManagement = () => {
 
       {/* VIEW USER PROFILE MODAL */}
       {viewingUser && (
-        <div className="fixed inset-0 bg-[#3E2723]/40 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-lg overflow-hidden animate-in zoom-in-95">
+        <div className="fixed inset-0 bg-[#3E2723]/40 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-in fade-in" onClick={() => setViewingUser(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-lg overflow-hidden animate-in zoom-in-95" onClick={(e) => e.stopPropagation()}>
             
             {/* Modal Header with Avatar */}
             <div className="bg-gradient-to-br from-[#2E7D32] to-[#1B5E20] px-6 py-6 relative overflow-hidden">

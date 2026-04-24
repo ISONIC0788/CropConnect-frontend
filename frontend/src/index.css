@@ -5,8 +5,8 @@
   /* CropConnect Brand Colors */
   --color-primary: #2E7D32; 
   --color-accent: #FBC02D;  
-  --color-cream: #F9F7F3;   
-  --color-brown: #3E2723;   
+  --color-cream: #F4FBF5;   
+  --color-brown: #23412A;   
   --color-dark: #212121;    
 
   /* Custom Typography */
@@ -16,7 +16,10 @@
 
 @layer base {
   body {
-    background-color: var(--color-cream);
+    background:
+      radial-gradient(circle at top left, rgba(46, 125, 50, 0.08), transparent 28%),
+      radial-gradient(circle at top right, rgba(251, 192, 45, 0.08), transparent 24%),
+      var(--color-cream);
     color: var(--color-brown);
     font-family: var(--font-sans); /* Applies Inter to everything by default */
     margin: 0;

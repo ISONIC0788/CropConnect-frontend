@@ -27,10 +27,10 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   const R = 6371; // Earth radius in km
   const dLat = (lat2 - lat1) * (Math.PI / 180);
   const dLon = (lon2 - lon1) * (Math.PI / 180);
-  const a = 
+  const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return Math.round(R * c); // Distance in km, rounded to whole number
 }
 
@@ -44,7 +44,7 @@ const SourcingMap = () => {
   const [selectedCrop, setSelectedCrop] = useState<string>('All Crops');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  
+
   // Real Data State
   const [listings, setListings] = useState<FrontendCropListing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,7 +95,7 @@ const SourcingMap = () => {
         // Call the filter endpoint
         const response = await axiosClient.get('/listings/filter', { params });
         const backendData: any[] = response.data;
-        
+
         // Map backend data to the frontend structure
         const mappedData: FrontendCropListing[] = backendData
           .filter(item => item.isVerified && item.status === 'ACTIVE') // Only ACTIVE + verified listings
@@ -107,7 +107,7 @@ const SourcingMap = () => {
             unit: "kg",
             pricePerKg: item.pricePerKg,
             farmer: item.farmer?.fullName || "Registered Farmer",
-            district: "Rwanda", 
+            district: "Rwanda",
             verified: item.isVerified,
             coordinates: {
               lat: item.location?.latitude || 0,
@@ -115,11 +115,11 @@ const SourcingMap = () => {
             },
             imageUrl: item.verificationPhotoUrl || undefined,
             // Calculate distance dynamically from the Buyer
-            distance: item.location ? 
-              calculateDistance(buyerLat, buyerLng, item.location.latitude, item.location.longitude) 
+            distance: item.location ?
+              calculateDistance(buyerLat, buyerLng, item.location.latitude, item.location.longitude)
               : 0
           }));
-          
+
         setListings(mappedData);
       } catch (error) {
         console.error("Failed to load filtered listings:", error);
@@ -176,7 +176,7 @@ const SourcingMap = () => {
   // Derived State: Filter the listings based on map criteria
   // Only search query remains here since crop and radius are handled by backend
   const filteredListings = listings.filter((listing) => {
-    return searchQuery === '' || 
+    return searchQuery === '' ||
       listing.crop.toLowerCase().includes(searchQuery.toLowerCase()) ||
       listing.farmer.toLowerCase().includes(searchQuery.toLowerCase());
   });
@@ -191,36 +191,41 @@ const SourcingMap = () => {
   };
 
   return (
-    <div className="flex h-full gap-6 relative">
-      
+    <div className="flex flex-col lg:flex-row h-full gap-6 relative">
+
       {/* LEFT PANE: Interactive Sourcing Map */}
-      <div className="w-full lg:w-7/12 rounded-xl border border-gray-200 overflow-hidden relative shadow-sm flex flex-col bg-[#F0FDF4]">
-        
+      <div className="w-full lg:w-7/12 rounded-xl border border-gray-200 overflow-hidden relative shadow-sm h-[500px] lg:h-full flex flex-col bg-[#F0FDF4]">
+
         {/* Floating Top Controls */}
-        <div className="absolute top-4 left-4 right-4 z-10 flex gap-4">
-          <div className="bg-white/95 backdrop-blur px-6 py-4 rounded-xl shadow-md border border-gray-100 flex-1 flex items-center gap-6">
-            <div className="flex items-center gap-2 text-gray-500 font-bold text-sm min-w-[120px]">
-              <Filter className="w-4 h-4 text-[#2E7D32]" /> Radius Filter
+        <div className="absolute top-2 left-2 right-2 sm:top-4 sm:left-4 sm:right-4 z-10 flex flex-col sm:flex-row gap-2 sm:gap-4">
+
+          {/* Radius Filter Container */}
+          <div className="bg-white/95 backdrop-blur px-3 py-3 sm:px-6 sm:py-4 rounded-xl shadow-md border border-gray-100 flex-1 flex items-center gap-3 sm:gap-6">
+            <div className="flex items-center gap-2 text-gray-500 font-bold text-[10px] sm:text-sm whitespace-nowrap">
+              <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#2E7D32]" />
+              <span className="hidden xs:inline">Radius Filter</span>
+              <span className="xs:hidden">Radius</span>
             </div>
-            <input 
-              type="range" 
+            <input
+              type="range"
               min="10" max="150" step="5"
               value={radius}
               onChange={(e) => setRadius(Number(e.target.value))}
-              className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#FBC02D]"
+              className="flex-1 h-1.5 sm:h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#FBC02D]"
               style={{
                 background: `linear-gradient(to right, #2E7D32 ${(radius - 10) / 140 * 100}%, #e5e7eb ${(radius - 10) / 140 * 100}%)`
               }}
             />
-            <span className="font-bold text-[#2E7D32] min-w-[50px]">{radius}km</span>
+            <span className="font-bold text-[#2E7D32] text-xs sm:text-sm min-w-[40px] sm:min-w-[50px] text-right">{radius}km</span>
           </div>
 
-          <div className="bg-white/95 backdrop-blur px-4 py-4 rounded-xl shadow-md border border-gray-100 flex items-center gap-3">
-            <span className="text-xs font-bold text-gray-500">Crop Type</span>
-            <select 
+          {/* Crop Type Filter Container */}
+          <div className="bg-white/95 backdrop-blur px-3 py-3 sm:px-4 sm:py-4 rounded-xl shadow-md border border-gray-100 flex items-center justify-between sm:justify-start gap-3">
+            <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">Crop</span>
+            <select
               value={selectedCrop}
               onChange={(e) => setSelectedCrop(e.target.value)}
-              className="flex items-center gap-2 border border-gray-200 rounded-md px-3 py-1.5 cursor-pointer bg-white text-sm font-medium text-[#3E2723] outline-none"
+              className="flex-1 sm:flex-none border border-gray-200 rounded-md px-2 py-1 cursor-pointer bg-white text-xs sm:text-sm font-medium text-[#3E2723] outline-none"
             >
               <option value="All Crops">All Crops</option>
               <option value="Maize">Maize</option>
@@ -262,7 +267,7 @@ const SourcingMap = () => {
                 const left = `calc(50% + ${Math.cos(angle) * distanceScale}%)`;
 
                 return (
-                  <div 
+                  <div
                     key={listing.id}
                     className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110 z-20"
                     style={{ top, left }}
@@ -282,15 +287,15 @@ const SourcingMap = () => {
       </div>
 
       {/* RIGHT PANE: Inventory Feed */}
-      <div className="w-full lg:w-5/12 flex flex-col h-full bg-[#F9F7F3] rounded-xl border-l border-gray-200 pl-6 pb-[100px]">
-        
+      <div className="w-full lg:w-5/12 flex flex-col h-full bg-[#F9F7F3] rounded-xl border-l border-gray-200 pl-4 lg:pl-6 pb-24 lg:pb-[100px]">
+
         {/* Search and Stats */}
         <div className="mb-6">
           <div className="relative mb-3">
             <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input 
-              type="text" 
-              placeholder="Search crops, farmers..." 
+            <input
+              type="text"
+              placeholder="Search crops, farmers..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32] bg-white shadow-sm"
@@ -307,7 +312,7 @@ const SourcingMap = () => {
             <p className="text-center text-gray-500 mt-10 animate-pulse">Loading inventory...</p>
           ) : (
             filteredListings.map(listing => (
-              <InventoryCard 
+              <InventoryCard
                 key={listing.id}
                 listing={listing}
                 isSelected={selectedIds.includes(listing.id)}
@@ -326,29 +331,29 @@ const SourcingMap = () => {
 
       {/* STICKY BOTTOM PANEL: Bulk Aggregation */}
       {selectedIds.length > 0 && (
-        <div className="absolute bottom-6 left-1/2 lg:left-[calc(50%+130px)] transform -translate-x-1/2 w-[90%] max-w-4xl bg-white rounded-2xl shadow-2xl border border-gray-200 p-5 flex items-center justify-between z-50 animate-in slide-in-from-bottom-5">
-          <div className="flex gap-8">
+        <div className="fixed sm:absolute bottom-4 sm:bottom-6 left-1/2 transform -translate-x-1/2 w-[95%] sm:w-[90%] max-w-4xl bg-white rounded-2xl shadow-2xl border border-gray-200 p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4 z-50 animate-in slide-in-from-bottom-5">
+          <div className="flex gap-4 sm:gap-8 w-full md:w-auto justify-around md:justify-start">
             <div>
-              <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">Items</p>
-              <p className="text-xl font-bold text-[#3E2723]">{selectedIds.length}</p>
+              <p className="text-[9px] sm:text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">Items</p>
+              <p className="text-sm sm:text-xl font-bold text-[#3E2723]">{selectedIds.length}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">Aggregated Volume</p>
-              <p className="text-xl font-bold text-[#3E2723]">{totalVolume.toLocaleString()} kg</p>
+              <p className="text-[9px] sm:text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">Volume</p>
+              <p className="text-sm sm:text-xl font-bold text-[#3E2723]">{totalVolume.toLocaleString()} kg</p>
             </div>
-            <div className="pl-8 border-l border-gray-100">
-              <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">Est. Total Cost</p>
-              <p className="text-xl font-bold text-[#2E7D32]">{totalCost.toLocaleString()} RWF</p>
+            <div className="pl-4 sm:pl-8 border-l border-gray-100">
+              <p className="text-[9px] sm:text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">Total Cost</p>
+              <p className="text-sm sm:text-xl font-bold text-[#2E7D32]">{totalCost.toLocaleString()} RWF</p>
             </div>
           </div>
-          
-          <button 
+
+          <button
             onClick={handlePlaceBulkBid}
             disabled={isBidding}
-            className="bg-[#2E7D32] hover:bg-green-800 text-white px-8 py-4 rounded-xl font-bold transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full md:w-auto bg-[#2E7D32] hover:bg-green-800 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl text-xs sm:text-base font-bold transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isBidding ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
-            {isBidding ? 'Placing Bids...' : 'Place Bulk Bid & Lock Inventory'}
+            {isBidding ? 'Placing Bids...' : 'Place Bulk Bid'}
           </button>
         </div>
       )}

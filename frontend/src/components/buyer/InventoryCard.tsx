@@ -24,13 +24,13 @@ const InventoryCard = ({ listing, isSelected, onToggle }: InventoryCardProps) =>
     e.stopPropagation();
     const local = localStorage.getItem('watchlist_ids');
     let savedIds: string[] = local ? JSON.parse(local) : [];
-    
+
     if (isSaved) {
       savedIds = savedIds.filter(id => id !== listing.id);
     } else {
       savedIds.push(listing.id);
     }
-    
+
     localStorage.setItem('watchlist_ids', JSON.stringify(savedIds));
     setIsSaved(!isSaved);
     window.dispatchEvent(new Event('watchlistUpdated'));
@@ -44,16 +44,16 @@ const InventoryCard = ({ listing, isSelected, onToggle }: InventoryCardProps) =>
   };
 
   return (
-    <div 
+    <div
       className={`bg-white rounded-xl border-2 transition-all duration-200 overflow-hidden flex h-40 cursor-pointer shadow-sm hover:shadow-md
       ${isSelected ? 'border-[#2E7D32] ring-1 ring-[#2E7D32]/20' : 'border-gray-100 hover:border-[#2E7D32]/40'}`}
       onClick={onToggle}
     >
       {/* Left Image Section with Absolute Badge */}
       <div className="relative w-1/3 min-w-[120px] h-full flex-shrink-0">
-        <img 
-          src={listing.imageUrl || getImage(listing.crop)} 
-          alt={listing.crop} 
+        <img
+          src={listing.imageUrl || getImage(listing.crop)}
+          alt={listing.crop}
           className="w-full h-full object-cover bg-gray-100"
           onError={(e) => {
             // Fallback safely if image fails to load
@@ -70,7 +70,7 @@ const InventoryCard = ({ listing, isSelected, onToggle }: InventoryCardProps) =>
 
       {/* Right Content Section */}
       <div className="p-4 flex-1 flex flex-col justify-between relative">
-        
+
         {/* Custom Checkbox (Top Right) */}
         <div className="absolute top-4 right-4">
           <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors
@@ -104,7 +104,7 @@ const InventoryCard = ({ listing, isSelected, onToggle }: InventoryCardProps) =>
         {/* Footer Info & Quick Bid */}
         <div className="flex justify-between items-center mt-3">
           <div className="flex items-center gap-2">
-            <button 
+            <button
               className="p-1 -ml-1 transition-transform active:scale-95"
               onClick={toggleWatchlist}
               title={isSaved ? "Remove from Watchlist" : "Save to Watchlist"}
@@ -113,7 +113,7 @@ const InventoryCard = ({ listing, isSelected, onToggle }: InventoryCardProps) =>
             </button>
             <p className="text-[10px] text-gray-400">Listed 2026-03-15</p>
           </div>
-          <button 
+          <button
             className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 hover:bg-green-50 text-gray-600 hover:text-[#2E7D32] border border-gray-200 hover:border-green-200 rounded-lg text-xs font-bold transition-colors"
             onClick={(e) => {
               e.stopPropagation(); // Prevents checking the card when clicking the button

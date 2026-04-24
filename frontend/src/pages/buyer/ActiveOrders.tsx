@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Clock, Shield, CheckCircle2, Truck, Package, PackageOpen, ArrowRight, Loader2 } from 'lucide-react';
+import { Clock, Shield, CheckCircle2, Truck, Package, PackageOpen, Loader2 } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
 import axiosClient from '../../api/axiosClient';
 import { toast } from 'sonner';
@@ -120,11 +120,11 @@ const ActiveOrders = () => {
 
   // Compute dynamic pipeline counts from real data
   const pipelineStages = [
-    { id: 'pending', stageIndex: 0, label: 'Pending Acceptance', icon: <Clock className="w-6 h-6" />, color: 'text-gray-500' },
-    { id: 'locked', stageIndex: 1, label: 'Inventory Locked', icon: <Shield className="w-6 h-6" />, color: 'text-[#FBC02D]' },
-    { id: 'quality', stageIndex: 2, label: 'Quality Check', icon: <CheckCircle2 className="w-6 h-6" />, color: 'text-[#3498DB]' },
-    { id: 'transit', stageIndex: 3, label: 'In Transit', icon: <Truck className="w-6 h-6" />, color: 'text-[#2E7D32]' },
-    { id: 'delivered', stageIndex: 4, label: 'Delivered', icon: <Package className="w-6 h-6" />, color: 'text-[#166534]' }
+    { id: 'pending', stageIndex: 0, label: 'Pending Acceptance', icon: <Clock className="w-6 h-6" />, color: 'text-gray-500', bg: 'bg-gray-50' },
+    { id: 'locked', stageIndex: 1, label: 'Inventory Locked', icon: <Shield className="w-6 h-6" />, color: 'text-[#FBC02D]', bg: 'bg-yellow-50' },
+    { id: 'quality', stageIndex: 2, label: 'Quality Check', icon: <CheckCircle2 className="w-6 h-6" />, color: 'text-[#3498DB]', bg: 'bg-blue-50' },
+    { id: 'transit', stageIndex: 3, label: 'In Transit', icon: <Truck className="w-6 h-6" />, color: 'text-[#2E7D32]', bg: 'bg-green-50' },
+    { id: 'delivered', stageIndex: 4, label: 'Delivered', icon: <Package className="w-6 h-6" />, color: 'text-[#166534]', bg: 'bg-[#ECFDF5]' }
   ].map(stage => ({
     ...stage,
     count: orders.filter(o => o.stageIndex === stage.stageIndex).length
@@ -138,26 +138,27 @@ const ActiveOrders = () => {
         <p className="text-sm text-gray-500 tracking-wide">Track your purchases through the pipeline</p>
       </div>
 
-      {/* TOP PIPELINE SUMMARY BAR */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm px-6 py-5 flex items-center justify-between overflow-x-auto no-scrollbar gap-4">
-        {pipelineStages.map((stage, idx) => (
-          <div key={stage.id} className="flex items-center min-w-max">
-            
-            {/* Stage Info: Icon on left, Text stacked on right */}
-            <div className={`flex items-center gap-3 ${stage.color}`}>
-              <div>{stage.icon}</div>
-              <div className="flex flex-col justify-center">
-                <span className="text-[13px] font-bold mb-0.5">{stage.label}</span>
-                <span className="text-xl font-bold leading-none">{loading ? '-' : stage.count}</span>
-              </div>
+      {/* TOP PIPELINE SUMMARY DASHBOARD */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        {pipelineStages.map((stage) => (
+          <div 
+            key={stage.id} 
+            className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col items-center text-center transition-all hover:shadow-md hover:border-green-100 group"
+          >
+            <div className={`p-4 rounded-2xl mb-3 transition-colors ${stage.bg} ${stage.color}`}>
+              {stage.icon}
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1 leading-tight px-2">
+                {stage.label}
+              </span>
+              <span className={`text-2xl font-black ${stage.color}`}>
+                {loading ? '—' : stage.count}
+              </span>
             </div>
             
-            {/* Arrow Separator */}
-            {idx < pipelineStages.length - 1 && (
-              <div className="mx-6 text-gray-200">
-                <ArrowRight className="w-5 h-5" />
-              </div>
-            )}
+            {/* Active Indicator Dot (Bottom) */}
+            <div className={`w-1.5 h-1.5 rounded-full mt-3 ${stage.count > 0 ? stage.color.replace('text-', 'bg-') : 'bg-gray-100'}`}></div>
           </div>
         ))}
       </div>
@@ -199,23 +200,33 @@ const ActiveOrders = () => {
               </div>
             </div>
 
-            {/* Segmented Pipeline Progress Bar (Thin style from image) */}
-            <div className="flex gap-2 mb-4">
+            {/* Segmented Pipeline Progress Bar (Step style) */}
+            <div className="flex gap-1.5 mb-5 mt-2">
               {[0, 1, 2, 3, 4].map(segmentIndex => {
                 const isFilled = segmentIndex <= order.stageIndex;
+                const activeColor = segmentIndex === 0 ? 'bg-gray-400' :
+                                   segmentIndex === 1 ? 'bg-[#FBC02D]' :
+                                   segmentIndex === 2 ? 'bg-[#3498DB]' :
+                                   segmentIndex === 3 ? 'bg-[#2E7D32]' : 'bg-[#166534]';
                 return (
                   <div 
                     key={segmentIndex} 
-                    className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${isFilled ? 'bg-[#2E7D32]' : 'bg-gray-100'}`}
+                    className={`h-2 flex-1 rounded-full transition-all duration-700 ${isFilled ? activeColor : 'bg-gray-100 opacity-30'} ${isFilled ? 'shadow-sm' : ''}`}
                   ></div>
                 );
               })}
             </div>
 
             {/* Bottom Info Row */}
-            <div className="flex justify-between items-center text-xs font-bold text-gray-400 mt-2">
-              <p>{order.weight}</p>
-              <p>Ordered {order.date}</p>
+            <div className="flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2 px-1">
+              <div className="flex items-center gap-2">
+                <Package className="w-3.5 h-3.5" />
+                <span>{order.weight}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="w-3.5 h-3.5" />
+                <span>Ordered {order.date}</span>
+              </div>
             </div>
 
             {/* SIMULATOR BUTTON */}

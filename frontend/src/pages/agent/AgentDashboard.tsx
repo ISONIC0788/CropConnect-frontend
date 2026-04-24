@@ -20,7 +20,7 @@ const AgentDashboard = () => {
       try {
         const token = localStorage.getItem('jwt_token');
         if (!token) throw new Error("No token found");
-        
+
         const decoded: any = jwtDecode(token);
         const userId = decoded.userId;
 
@@ -34,13 +34,13 @@ const AgentDashboard = () => {
           setAllTasks(tasks);
         } catch (taskErr) {
           console.error("Failed to fetch listings", taskErr);
-          setAllTasks([]); 
+          setAllTasks([]);
         }
 
       } catch (error) {
         console.error("Failed to load dashboard data:", error);
         if (error instanceof Error && error.message === "No token found") {
-           navigate('/login');
+          navigate('/login');
         }
       } finally {
         setLoading(false);
@@ -63,11 +63,11 @@ const AgentDashboard = () => {
 
   return (
     <div className="flex flex-col h-full animate-in fade-in duration-300 pb-20">
-      
+
       {/* TOP HEADER */}
       <div className="bg-[#2E7D32] px-6 pt-12 pb-8 rounded-b-3xl text-white shadow-md relative overflow-hidden flex-shrink-0">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-        
+
         <div className="flex justify-between items-center relative z-10">
           <div>
             <h1 className="text-2xl font-bold font-serif tracking-wide">Hello, {agentName.split(' ')[0]}</h1>
@@ -78,7 +78,7 @@ const AgentDashboard = () => {
           </div>
           <div className="relative">
             <div className="w-12 h-12 bg-white rounded-full border-2 border-white/20 shadow-sm flex items-center justify-center text-[#2E7D32] font-bold text-xl uppercase">
-               {agentName.charAt(0)}
+              {agentName.charAt(0)}
             </div>
             {pendingTasks.length > 0 && (
               <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#FBC02D] rounded-full border-2 border-[#2E7D32] flex items-center justify-center">
@@ -91,12 +91,12 @@ const AgentDashboard = () => {
 
       {/* MAIN CONTENT */}
       <div className="px-6 py-6 space-y-8 flex-1 overflow-y-auto">
-        
+
         {/* DAILY METRICS */}
         <div>
           <h2 className="text-[#3E2723] font-bold text-lg mb-4 font-serif">Your Activity</h2>
           <div className="grid grid-cols-2 gap-3">
-            
+
             {/* Pending Metric */}
             <div onClick={() => setActiveTab('pending')} className={`cursor-pointer rounded-2xl p-4 border shadow-sm transition-all ${activeTab === 'pending' ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-100 hover:bg-gray-50'}`}>
               <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-3">
@@ -128,44 +128,44 @@ const AgentDashboard = () => {
               {displayedTasks.length} Total
             </span>
           </div>
-          
+
           <div className="space-y-3">
-            
+
             {displayedTasks.length === 0 ? (
-                <div className="text-center p-4 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-500 font-medium">
-                    {activeTab === 'pending' ? 'No pending verifications! Great job.' : 'No verified crops found.'}
-                </div>
+              <div className="text-center p-4 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-500 font-medium">
+                {activeTab === 'pending' ? 'No pending verifications! Great job.' : 'No verified crops found.'}
+              </div>
             ) : (
-                displayedTasks.map((task) => (
-                    <div key={task.listingId} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden transition-all hover:shadow-md">
-                      <div className={`absolute left-0 top-0 bottom-0 w-1 ${activeTab === 'pending' ? 'bg-blue-500' : 'bg-[#2E7D32]'}`}></div>
-                      
-                      <div className="flex justify-between items-start mb-3">
-                          <div className="flex items-center gap-2">
-                            {activeTab === 'pending' ? (
-                              <span className="px-2 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider rounded-md border border-blue-100">Verification Required</span>
-                            ) : (
-                              <span className="px-2 py-1 bg-green-50 text-[#2E7D32] text-[10px] font-bold uppercase tracking-wider rounded-md border border-green-100 flex items-center gap-1">
-                                <PackageCheck className="w-3 h-3" /> Certified
-                              </span>
-                            )}
-                          </div>
-                      </div>
+              displayedTasks.map((task) => (
+                <div key={task.listingId} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden transition-all hover:shadow-md">
+                  <div className={`absolute left-0 top-0 bottom-0 w-1 ${activeTab === 'pending' ? 'bg-blue-500' : 'bg-[#2E7D32]'}`}></div>
 
-                      {/* Uses the proper backend field quantityKg */}
-                      <h3 className="font-bold text-[#3E2723] text-lg mb-1">{task.quantityKg}kg {task.cropType}</h3>
-                      <p className="text-xs font-medium text-gray-500 mb-4 flex items-center gap-1">
-                          Listing ID: #{task.listingId.substring(0, 8)}... <span className="text-gray-300">•</span> {task.farmer?.fullName || 'Farmer'}
-                      </p>
-
-                      {/* Only show the 'Start Verification' button if it's pending */}
-                      {activeTab === 'pending' && (
-                        <Link to={`/agent/verify?id=${task.listingId}`} className="w-full py-3 mt-2 bg-gray-50 text-[#2E7D32] border border-gray-100 hover:border-green-200 hover:bg-green-50 rounded-xl text-sm font-bold flex items-center justify-center transition-colors">
-                            Start Verification
-                        </Link>
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center gap-2">
+                      {activeTab === 'pending' ? (
+                        <span className="px-2 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider rounded-md border border-blue-100">Verification Required</span>
+                      ) : (
+                        <span className="px-2 py-1 bg-green-50 text-[#2E7D32] text-[10px] font-bold uppercase tracking-wider rounded-md border border-green-100 flex items-center gap-1">
+                          <PackageCheck className="w-3 h-3" /> Certified
+                        </span>
                       )}
                     </div>
-                ))
+                  </div>
+
+                  {/* Uses the proper backend field quantityKg */}
+                  <h3 className="font-bold text-[#3E2723] text-lg mb-1">{task.quantityKg}kg {task.cropType}</h3>
+                  <p className="text-xs font-medium text-gray-500 mb-4 flex items-center gap-1">
+                    Listing ID: #{task.listingId.substring(0, 8)}... <span className="text-gray-300">•</span> {task.farmer?.fullName || 'Farmer'}
+                  </p>
+
+                  {/* Only show the 'Start Verification' button if it's pending */}
+                  {activeTab === 'pending' && (
+                    <Link to={`/agent/verify?id=${task.listingId}`} className="w-full py-3 mt-2 bg-gray-50 text-[#2E7D32] border border-gray-100 hover:border-green-200 hover:bg-green-50 rounded-xl text-sm font-bold flex items-center justify-center transition-colors">
+                      Start Verification
+                    </Link>
+                  )}
+                </div>
+              ))
             )}
 
           </div>

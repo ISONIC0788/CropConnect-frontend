@@ -13,6 +13,8 @@ export interface AuthResponse {
 export interface RegisterData {
   fullName: string;
   phoneNumber: string;
+  email: string;
+  companyName?: string | null;
   passwordHash: string; // Your backend uses this specific field name
   role: string;
 }
