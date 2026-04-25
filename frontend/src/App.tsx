@@ -11,6 +11,7 @@ import Testimonials from './components/Testimonials'
 import FAQ from './components/FAQ'
 import Contact from './components/Contact'
 import Footer from './components/Footer'
+import LogoutConfirmationModal from './components/LogoutConfirmationModal'
 
 // --- AUTH COMPONENTS ---
 import AuthLayout from './layouts/AuthLayout'
@@ -62,15 +63,6 @@ const LandingPage = () => (
     <Footer />
   </main>
 );
-
-import { useEffect } from 'react';
-const LogoutRoute = () => {
-  useEffect(() => {
-    localStorage.removeItem('jwt_token');
-    window.location.href = '/login';
-  }, []);
-  return null;
-};
 
 function App() {
   return (
@@ -136,7 +128,7 @@ function App() {
         } />
 
         {/* Logout Route - Redirects to Login */}
-        <Route path="/logout" element={<LogoutRoute />} />
+        <Route path="/logout" element={<LogoutConfirmationModal />} />
       </Routes>
     </Router>
   )

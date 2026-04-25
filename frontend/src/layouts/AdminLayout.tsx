@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { LayoutDashboard, Bell, Search, Menu, X, Users, Package, ShoppingCart, Gavel, Clock } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 import AdminSidebar from '../pages/admin/AdminSidebar';
 import axiosClient from '../api/axiosClient';
 
@@ -64,9 +65,45 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [notifOpen, setNotifOpen]       = useState(false);
   const [notes, setNotes]               = useState<ActivityNote[]>([]);
+  const [adminName, setAdminName]       = useState('Admin');
+  const [adminEmail, setAdminEmail]     = useState('admin@cropconnect.rw');
   const notifRef = useRef<HTMLDivElement>(null);
   const location  = useLocation();
   const navigate  = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('jwt_token');
+    if (!token) return;
+
+    try {
+      const decoded: any = jwtDecode(token);
+      const candidateName = decoded.fullName || decoded.name || '';
+      if (typeof candidateName === 'string' && /[A-Za-z]/.test(candidateName)) {
+        setAdminName(candidateName);
+      }
+      if (typeof decoded.email === 'string' && decoded.email.trim()) {
+        setAdminEmail(decoded.email);
+      }
+
+      if (typeof decoded.userId === 'string' && decoded.userId.trim()) {
+        axiosClient.get(`/users/${decoded.userId}`).then((res) => {
+          const dbName = res.data?.fullName;
+          const dbEmail = res.data?.email;
+
+          if (typeof dbName === 'string' && dbName.trim()) {
+            setAdminName(dbName);
+          }
+          if (typeof dbEmail === 'string' && dbEmail.trim()) {
+            setAdminEmail(dbEmail);
+          }
+        }).catch(() => {
+          // Keep JWT/fallback values if DB lookup fails
+        });
+      }
+    } catch (_) {
+      // Keep fallback labels when token is missing or malformed
+    }
+  }, []);
 
   // ── Dynamic page title ──────────────────────────────────────────────────
   let pageTitle = 'Dashboard Overview';
@@ -316,11 +353,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               title="Open Profile Settings"
             >
               <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm group-hover:bg-green-800 transition-colors">
-                SA
+                {adminName.charAt(0).toUpperCase()}
               </div>
               <div className="hidden md:flex flex-col">
-                <span className="text-sm font-bold text-brown leading-none mb-1">Super Admin</span>
-                <span className="text-xs text-gray-500 leading-none">admin@cropconnect.rw</span>
+                <span className="text-sm font-bold text-brown leading-none mb-1 truncate max-w-[140px]">{adminName}</span>
+                <span className="text-xs text-gray-500 leading-none truncate max-w-[180px]">{adminEmail}</span>
               </div>
             </div>
           </div>
