@@ -35,8 +35,7 @@ const FarmerLayout = ({ children }: { children: React.ReactNode }) => {
   ];
 
   const handleLogout = () => {
-    localStorage.removeItem('jwt_token');
-    navigate('/login');
+    navigate('/logout');
   };
 
   return (
