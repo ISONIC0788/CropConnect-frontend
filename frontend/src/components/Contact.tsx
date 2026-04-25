@@ -36,7 +36,7 @@ const Contact = () => {
               <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-primary transition-transform group-hover:scale-110">
                 <Phone className="w-6 h-6" />
               </div>
-              <span className="text-brown font-medium">+250 788 123 456</span>
+              <span className="text-brown font-medium">0788459217</span>
             </div>
 
             <div className="flex items-center gap-4 group">

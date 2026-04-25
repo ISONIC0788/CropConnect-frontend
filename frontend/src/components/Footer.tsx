@@ -64,7 +64,16 @@ const Footer = () => {
           className="pt-8 border-t border-green-700 flex flex-col md:flex-row justify-between items-center gap-6"
         >
           <p className="text-green-200 text-sm">
-            © 2026 CropConnect. A product of Ebyte Code Labs. All rights reserved.
+            © 2026 CropConnect. A product of{' '}
+            <a
+              href="https://www.ebytesoftlab.dev/"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="font-bold text-white hover:text-accent transition-colors"
+            >
+              Ebyte Code Labs
+            </a>{' '}
+            . All rights reserved.
           </p>
           
           {/* Social Icons with Hover Effects */}
