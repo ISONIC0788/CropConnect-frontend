@@ -106,7 +106,7 @@ const Profile = () => {
     joined: user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "January 2024",
     address: user?.address || "Warehouse 4, Kigali Special Economic Zone",
     email: user?.email || "procurement@kigalifresh.rw",
-    phone: user?.phoneNumber || "+250 788 123 456"
+    phone: user?.phoneNumber || "0788459217"
   };
 
   const preferences = {
