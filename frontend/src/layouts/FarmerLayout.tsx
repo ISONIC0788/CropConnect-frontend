@@ -2,24 +2,40 @@ import React, { useState } from 'react';
 import { LogOut, Menu, LayoutDashboard, History, Wallet, Bell, Search, User } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
+import axiosClient from '../api/axiosClient';
 
 const FarmerLayout = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [farmerName, setFarmerName] = useState('Farmer');
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Read farmer name from JWT token
-  let farmerName = 'Farmer';
-
-  try {
+  React.useEffect(() => {
     const token = localStorage.getItem('jwt_token');
-    if (token) {
-      const decoded: any = jwtDecode(token);
-      farmerName = decoded.fullName || decoded.sub || 'Farmer';
+    if (!token) return;
 
+    try {
+      const decoded: any = jwtDecode(token);
+      const candidateName = decoded.fullName || decoded.name || '';
+      if (typeof candidateName === 'string' && /[A-Za-z]/.test(candidateName)) {
+        setFarmerName(candidateName);
+      }
+
+      if (typeof decoded.userId === 'string' && decoded.userId.trim()) {
+        axiosClient.get(`/users/${decoded.userId}`).then((res) => {
+          const dbName = res.data?.fullName;
+          if (typeof dbName === 'string' && dbName.trim()) {
+            setFarmerName(dbName);
+          }
+        }).catch(() => {
+          // Keep JWT/fallback values if DB lookup fails
+        });
+      }
+    } catch (_) {
+      // Keep fallback labels when token is missing or malformed
     }
-  } catch (_) {}
+  }, []);
 
   // Dynamic page title — same pattern as BuyerLayout & AdminLayout
   let pageTitle = 'Dashboard';

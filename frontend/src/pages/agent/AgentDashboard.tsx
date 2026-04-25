@@ -23,10 +23,29 @@ const AgentDashboard = () => {
 
         const decoded: any = jwtDecode(token);
         const userId = decoded.userId;
+        const jwtFullName = typeof decoded.fullName === 'string' ? decoded.fullName.trim() : '';
+        const jwtName = typeof decoded.name === 'string' ? decoded.name.trim() : '';
+
+        if (jwtFullName) {
+          setAgentName(jwtFullName);
+        } else if (jwtName) {
+          setAgentName(jwtName);
+        }
 
         // Fetch Profile
-        const profile = await agentService.getAgentProfile(userId);
-        setAgentName(profile.fullName || decoded.sub);
+        if (typeof userId === 'string' && userId.trim()) {
+          const profile = await agentService.getAgentProfile(userId);
+          const dbFullName = typeof profile?.fullName === 'string' ? profile.fullName.trim() : '';
+          if (dbFullName) {
+            setAgentName(dbFullName);
+          } else if (jwtFullName || jwtName) {
+            setAgentName(jwtFullName || jwtName);
+          } else {
+            setAgentName('Agent');
+          }
+        } else {
+          setAgentName(jwtFullName || jwtName || 'Agent');
+        }
 
         // Fetch ALL Listings and store them
         try {
@@ -70,7 +89,7 @@ const AgentDashboard = () => {
 
         <div className="flex justify-between items-center relative z-10">
           <div>
-            <h1 className="text-2xl font-bold font-serif tracking-wide">Hello, {agentName.split(' ')[0]}</h1>
+            <h1 className="text-2xl font-bold font-serif tracking-wide">Hello, {agentName}</h1>
             <div className="flex items-center gap-1.5 text-green-100 text-sm mt-1.5">
               <MapPin className="w-3.5 h-3.5" />
               <span className="font-medium tracking-wide">Field Agent</span>

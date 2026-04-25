@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Bell, Search, Menu, CheckCheck } from 'lucide-react';
+import { jwtDecode } from 'jwt-decode';
 import BuyerSidebar from '../components/buyer/BuyerSidebar';
 import axiosClient from '../api/axiosClient';
 
@@ -31,11 +32,44 @@ const BuyerLayout = ({ children }: BuyerLayoutProps) => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [buyerName, setBuyerName] = useState('Buyer');
+  const [buyerRoleLabel, setBuyerRoleLabel] = useState('Wholesale Buyer');
   const [readNotifs, setReadNotifs] = useState<string[]>(() => {
     const saved = localStorage.getItem('read_notifications');
     return saved ? JSON.parse(saved) : [];
   });
   const location = useLocation();
+
+  useEffect(() => {
+    const token = localStorage.getItem('jwt_token');
+    if (!token) return;
+
+    try {
+      const decoded: any = jwtDecode(token);
+      const candidateName = decoded.fullName || decoded.name || '';
+      if (typeof candidateName === 'string' && /[A-Za-z]/.test(candidateName)) {
+        setBuyerName(candidateName);
+      }
+
+      const roleValue = decoded.role || decoded.authorities?.[0] || '';
+      if (typeof roleValue === 'string' && roleValue.toUpperCase().includes('BUYER')) {
+        setBuyerRoleLabel('Buyer');
+      }
+
+      if (typeof decoded.userId === 'string' && decoded.userId.trim()) {
+        axiosClient.get(`/users/${decoded.userId}`).then((res) => {
+          const dbName = res.data?.fullName;
+          if (typeof dbName === 'string' && dbName.trim()) {
+            setBuyerName(dbName);
+          }
+        }).catch(() => {
+          // Keep JWT/fallback values if DB lookup fails
+        });
+      }
+    } catch (_) {
+      // Keep fallback labels when token is missing or malformed
+    }
+  }, []);
 
   useEffect(() => {
     // Fetch notifications representing new verified products
@@ -197,11 +231,11 @@ const BuyerLayout = ({ children }: BuyerLayoutProps) => {
                 src="/testimonial_agent.jpeg" 
                 alt="Buyer Profile" 
                 className="w-9 h-9 rounded-full object-cover border-2 border-transparent group-hover:border-[#2E7D32] transition-all"
-                onError={(e) => { e.currentTarget.src = 'https://ui-avatars.com/api/?name=Buyer&background=2E7D32&color=fff' }}
+                onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(buyerName)}&background=2E7D32&color=fff`; }}
               />
               <div className="hidden md:flex flex-col">
-                <span className="text-sm font-bold text-[#3E2723] leading-none mb-1">Kigali Fresh</span>
-                <span className="text-xs text-gray-500 leading-none">Wholesale Buyer</span>
+                <span className="text-sm font-bold text-[#3E2723] leading-none mb-1 truncate max-w-[140px]">{buyerName}</span>
+                <span className="text-xs text-gray-500 leading-none">{buyerRoleLabel}</span>
               </div>
             </div>
           </div>
